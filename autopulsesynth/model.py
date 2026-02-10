@@ -48,9 +48,42 @@ class QubitHamiltonianModel:
     sigma_x: np.ndarray = field(default_factory=lambda: SIGMA_X.copy())
     sigma_y: np.ndarray = field(default_factory=lambda: SIGMA_Y.copy())
     sigma_z: np.ndarray = field(default_factory=lambda: SIGMA_Z.copy())
+    
+    # Decoherence times (seconds). None or inf means no decoherence.
+    t1: float = None
+    t2: float = None
 
     def operators(self) -> Dict[str, np.ndarray]:
         return {"sx": self.sigma_x, "sy": self.sigma_y, "sz": self.sigma_z}
+
+    def collapse_ops(self) -> list[np.ndarray]:
+        """Return collapse operators for Lindblad master equation."""
+        c_ops = []
+        if self.t1 is not None and self.t1 > 0 and not np.isinf(self.t1):
+            # Energy relaxation: sqrt(1/T1) * sigma_minus
+            # sigma_minus = |0><1| = [[0, 1], [0, 0]]
+            sigma_minus = np.array([[0, 1], [0, 0]], dtype=complex)
+            c_ops.append(np.sqrt(1.0 / self.t1) * sigma_minus)
+        
+        if self.t2 is not None and self.t2 > 0 and not np.isinf(self.t2):
+            # Pure dephasing: sqrt(1/Tphi) * sigma_z / sqrt(2)? 
+            # Standard definition: 1/T2 = 1/(2T1) + 1/Tphi
+            # If we assume input T2 is the total Coherence time, we extract Tphi.
+            # Rate gamma_phi = 1/T2 - 1/(2T1).
+            rate_1 = 0.0
+            if self.t1 is not None and self.t1 > 0 and not np.isinf(self.t1):
+                rate_1 = 1.0 / self.t1
+            
+            rate_2 = 1.0 / self.t2
+            rate_phi = rate_2 - 0.5 * rate_1
+            
+            if rate_phi > 1e-9:
+                # Dephasing operator: sqrt(gamma_phi/2) * sigma_z
+                # Master eq term: gamma_phi * (sz rho sz - rho) if using sz
+                # Lindblad op L = sqrt(gamma_phi/2) sz
+                c_ops.append(np.sqrt(rate_phi * 0.5) * self.sigma_z)
+                
+        return c_ops
 
 
 @dataclass(frozen=True)

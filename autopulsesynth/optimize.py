@@ -21,7 +21,7 @@ from scipy.optimize import differential_evolution
 
 from .model import QubitHamiltonianModel, UncertaintyModel
 from .pulses import GaussianDragPulse
-from .simulate import simulate_unitary, average_gate_fidelity, target_unitary
+from .simulate import simulate_evolution, fidelity_metric, target_unitary
 
 
 @dataclass
@@ -56,8 +56,8 @@ class SurrogateDataset:
             # simulate across multiple theta values (batched)
             ox, oy = pulse_family.sample_controls(params, smooth_sigma_pts=smooth_sigma_pts)
             for th in theta_samples:
-                U = simulate_unitary(model, pulse_family.duration, ox, oy, th)
-                f = average_gate_fidelity(U, V)
+                res = simulate_evolution(model, pulse_family.duration, ox, oy, th)
+                f = fidelity_metric(res, V)
                 # features include pulse + theta
                 x = np.concatenate([pulse_family.to_feature_vector(params), th.astype(float)], axis=0)
                 feats.append(x)
@@ -83,7 +83,7 @@ def train_surrogate(
         n_estimators=400,
         random_state=rng_seed,
         min_samples_leaf=2,
-        n_jobs=-1,
+        n_jobs=1,
     )
     model.fit(X_train, y_train)
     pred = model.predict(X_test)
@@ -100,6 +100,7 @@ def _uncertainty_objective_from_surrogate(
     surrogate: RandomForestRegressor,
     theta_eval: np.ndarray,
     mode: str,
+    gate: str = "X",
 ) -> Callable[[np.ndarray], float]:
     mode = mode.lower()
     if mode not in ("worst", "mean"):
@@ -109,12 +110,39 @@ def _uncertainty_objective_from_surrogate(
         # penalty if out of bounds
         lo, hi = pulse_family.param_bounds()
         if np.any(params < lo) or np.any(params > hi):
-            return 1.0  # large loss (since fidelity in [0,1])
+            return 10.0  # large loss
+        
+        # 1. Prediction from surrogate
         feats_p = pulse_family.to_feature_vector(params)
         X = np.hstack([np.repeat(feats_p[None, :], len(theta_eval), axis=0), theta_eval])
         f_pred = surrogate.predict(X)
-        f = np.min(f_pred) if mode == "worst" else np.mean(f_pred)
-        return float(1.0 - f)  # minimize 1-fidelity
+        f_val = np.min(f_pred) if mode == "worst" else np.mean(f_pred)
+        
+        # 2. Physics-informed regularization (prevent 7pi pulses or wrong axes)
+        # Approximate Gaussian area: A * sigma * sqrt(2pi)
+        # This ignores DRAG and truncation, but is a strong guide for the "main" lobe.
+        A, t0, sigma, phi, beta = params
+        area = A * sigma * np.sqrt(2 * np.pi)
+        
+        # Target angle for X/Y/etc (assumed Pi for now for X)
+        target_area = np.pi
+        if gate.startswith("S"): # SX, SQRTX
+            target_area = np.pi / 2.0
+            
+        area_penalty = 2.0 * (area - target_area)**2
+        
+        # 3. Soft constraint on Phase (Axis Alignment)
+        # For X-type gates (X, SX), we want phi ~ 0 or pi.
+        # Ideally phi=0 means drive is along X.
+        # phi=pi means drive is along -X. Both are fine for "X gate" up to global phase?
+        # Actually X gate is specifically rotation about +X axis usually.
+        # But let's penalize sin(phi)^2 to force it to real axis.
+        phase_penalty = 0.0
+        if gate in ("X", "SX", "SQRTX", "SQRX"):
+             # Penalize y-component of the main Gaussian drive
+             phase_penalty = 5.0 * np.sin(phi)**2
+        
+        return float(1.0 - f_val + area_penalty + phase_penalty)
     return obj
 
 
@@ -123,6 +151,7 @@ def optimize_under_uncertainty(
     surrogate: RandomForestRegressor,
     uncertainty: UncertaintyModel,
     mode: str = "worst",
+    gate: str = "X",
     n_theta_eval: int = 64,
     rng_seed: int = 1,
 ) -> Dict[str, object]:
@@ -132,7 +161,7 @@ def optimize_under_uncertainty(
 
     lo, hi = pulse_family.param_bounds()
     bounds = list(zip(lo.tolist(), hi.tolist()))
-    obj = _uncertainty_objective_from_surrogate(pulse_family, surrogate, theta_eval, mode=mode)
+    obj = _uncertainty_objective_from_surrogate(pulse_family, surrogate, theta_eval, mode=mode, gate=gate)
 
     result = differential_evolution(
     obj,
@@ -177,8 +206,8 @@ def verify_in_simulator(
     ox, oy = pulse_family.sample_controls(params, smooth_sigma_pts=smooth_sigma_pts)
     fs = []
     for th in theta:
-        U = simulate_unitary(model, pulse_family.duration, ox, oy, th)
-        fs.append(average_gate_fidelity(U, V))
+        res = simulate_evolution(model, pulse_family.duration, ox, oy, th)
+        fs.append(fidelity_metric(res, V))
     fs = np.array(fs, dtype=float)
     return {
         "f_mean": float(np.mean(fs)),

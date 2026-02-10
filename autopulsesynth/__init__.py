@@ -9,20 +9,21 @@ All results are simulated.
 
 from .model import QubitHamiltonianModel, UncertaintyModel
 from .pulses import GaussianDragPulse, clip_and_smooth
-from .simulate import simulate_unitary, average_gate_fidelity
+from .simulate import simulate_evolution, fidelity_metric
 from .optimize import SurrogateDataset, train_surrogate, optimize_under_uncertainty
-from .export import export_pulse_json, export_qiskit_schedule_optional
+from .utils import hz_to_rad_s, rad_s_to_hz
+from .metrics import average_gate_fidelity_unitary, average_state_fidelity_proxy
 
 __all__ = [
     "QubitHamiltonianModel",
     "UncertaintyModel",
     "GaussianDragPulse",
     "clip_and_smooth",
-    "simulate_unitary",
-    "average_gate_fidelity",
+    "simulate_evolution",
+    "fidelity_metric",
     "SurrogateDataset",
     "train_surrogate",
     "optimize_under_uncertainty",
-    "export_pulse_json",
-    "export_qiskit_schedule_optional",
+    "hz_to_rad_s",
+    "average_gate_fidelity_unitary",
 ]

@@ -1,0 +1,17 @@
+Metadata-Version: 2.4
+Name: autopulsesynth
+Version: 0.1.0
+Summary: Robust quantum pulse optimization via surrogate-assisted control
+Author: AutoPulseSynth Team
+Requires-Python: >=3.8
+License-File: LICENSE
+Requires-Dist: numpy>=1.20
+Requires-Dist: scipy>=1.7
+Requires-Dist: qutip>=4.6
+Requires-Dist: scikit-learn>=1.0
+Requires-Dist: matplotlib
+Dynamic: author
+Dynamic: license-file
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

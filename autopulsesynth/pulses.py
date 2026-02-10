@@ -63,8 +63,9 @@ class GaussianDragPulse:
 
     def param_bounds(self) -> Tuple[np.ndarray, np.ndarray]:
         # A, t0, sigma, phi, beta
-        lo = np.array([0.0, 0.0, self.sigma_min, -np.pi, -2.0], dtype=float)
-        hi = np.array([self.amp_max, self.duration, 0.5 * self.duration, np.pi, 2.0], dtype=float)
+        # Restriction: beta should be perturbative [-0.2, 0.2] to avoid geometric phase artifacts
+        lo = np.array([0.0, 0.0, self.sigma_min, -np.pi, -0.2], dtype=float)
+        hi = np.array([self.amp_max, self.duration, 0.5 * self.duration, np.pi, 0.2], dtype=float)
         return lo, hi
 
     def sample_controls(self, params: np.ndarray, smooth_sigma_pts: float = 0.0) -> Tuple[np.ndarray, np.ndarray]:
@@ -74,8 +75,8 @@ class GaussianDragPulse:
         g = _gaussian(t, t0, sigma)
         gp = _gaussian_derivative(t, t0, sigma)
 
-        ox = A * g * np.cos(phi) - A * beta * gp * np.sin(phi)
-        oy = A * g * np.sin(phi) + A * beta * gp * np.cos(phi)
+        ox = A * g * np.cos(phi) - A * beta * (gp * sigma) * np.sin(phi)
+        oy = A * g * np.sin(phi) + A * beta * (gp * sigma) * np.cos(phi)
 
         ox = clip_and_smooth(ox, self.amp_max, smooth_sigma_pts=smooth_sigma_pts)
         oy = clip_and_smooth(oy, self.amp_max, smooth_sigma_pts=smooth_sigma_pts)
