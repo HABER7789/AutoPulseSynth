@@ -6,6 +6,7 @@ from pathlib import Path
 from autopulsesynth.model import QubitHamiltonianModel, UncertaintyModel
 from autopulsesynth.pulses import GaussianDragPulse
 from autopulsesynth.optimize import SurrogateDataset, train_surrogate, optimize_under_uncertainty, verify_in_simulator
+from autopulsesynth.ir import PulseIR
 
 from .utils import hz_to_rad_s
 
@@ -35,12 +36,15 @@ def cmd_synthesize(args):
         sigma_min=args.duration / 20.0
     )
 
+    # 3. Create Intermediate Representation
+    target_ir = PulseIR.from_abstract_gate(args.gate, args.duration)
+
     print("  - Generating surrogate dataset...")
     dataset = SurrogateDataset.build(
         pulse_family=pulse,
         model=model,
         uncertainty=uncertainty,
-        gate=args.gate,
+        target_ir=target_ir,
         n_pulses=args.n_train,
         n_theta=args.n_theta_train,
         rng_seed=args.seed
@@ -56,7 +60,7 @@ def cmd_synthesize(args):
         surrogate=surrogate,
         uncertainty=uncertainty,
         mode="worst",
-        gate=args.gate,
+        target_ir=target_ir,
         n_theta_eval=64,
         rng_seed=args.seed
     )
@@ -67,7 +71,7 @@ def cmd_synthesize(args):
         pulse_family=pulse,
         params=opt_res["best_params"],
         uncertainty=uncertainty,
-        gate=args.gate,
+        target_ir=target_ir,
         n_theta=128,
         rng_seed=args.seed+1
     )

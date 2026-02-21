@@ -22,6 +22,7 @@ from scipy.optimize import differential_evolution
 from .model import QubitHamiltonianModel, UncertaintyModel
 from .pulses import GaussianDragPulse
 from .simulate import simulate_evolution, fidelity_metric, target_unitary
+from .ir import PulseIR
 
 
 @dataclass
@@ -35,7 +36,7 @@ class SurrogateDataset:
         pulse_family: GaussianDragPulse,
         model: QubitHamiltonianModel,
         uncertainty: UncertaintyModel,
-        gate: str,
+        target_ir: PulseIR,
         n_pulses: int,
         n_theta: int,
         rng_seed: int = 0,
@@ -49,7 +50,7 @@ class SurrogateDataset:
         ys = []
         params_list = []
         theta_list = []
-        V = target_unitary(gate)
+        V = target_ir.unitary_matrix
 
         for _ in range(n_pulses):
             params = rng.uniform(lo, hi)
@@ -100,7 +101,7 @@ def _uncertainty_objective_from_surrogate(
     surrogate: RandomForestRegressor,
     theta_eval: np.ndarray,
     mode: str,
-    gate: str = "X",
+    target_ir: PulseIR,
 ) -> Callable[[np.ndarray], float]:
     mode = mode.lower()
     if mode not in ("worst", "mean"):
@@ -126,7 +127,7 @@ def _uncertainty_objective_from_surrogate(
         
         # Target angle for X/Y/etc (assumed Pi for now for X)
         target_area = np.pi
-        if gate.startswith("S"): # SX, SQRTX
+        if target_ir.gate_name.startswith("S"): # SX, SQRTX
             target_area = np.pi / 2.0
             
         area_penalty = 2.0 * (area - target_area)**2
@@ -135,10 +136,9 @@ def _uncertainty_objective_from_surrogate(
         # For X-type gates (X, SX), we want phi ~ 0 or pi.
         # Ideally phi=0 means drive is along X.
         # phi=pi means drive is along -X. Both are fine for "X gate" up to global phase?
-        # Actually X gate is specifically rotation about +X axis usually.
-        # But let's penalize sin(phi)^2 to force it to real axis.
+        # phase_penalty = 0.0
         phase_penalty = 0.0
-        if gate in ("X", "SX", "SQRTX", "SQRX"):
+        if target_ir.gate_name in ("X", "SX", "SQRTX", "SQRX"):
              # Penalize y-component of the main Gaussian drive
              phase_penalty = 5.0 * np.sin(phi)**2
         
@@ -151,7 +151,7 @@ def optimize_under_uncertainty(
     surrogate: RandomForestRegressor,
     uncertainty: UncertaintyModel,
     mode: str = "worst",
-    gate: str = "X",
+    target_ir: PulseIR = None,
     n_theta_eval: int = 64,
     rng_seed: int = 1,
 ) -> Dict[str, object]:
@@ -161,7 +161,7 @@ def optimize_under_uncertainty(
 
     lo, hi = pulse_family.param_bounds()
     bounds = list(zip(lo.tolist(), hi.tolist()))
-    obj = _uncertainty_objective_from_surrogate(pulse_family, surrogate, theta_eval, mode=mode, gate=gate)
+    obj = _uncertainty_objective_from_surrogate(pulse_family, surrogate, theta_eval, mode=mode, target_ir=target_ir)
 
     result = differential_evolution(
     obj,
@@ -195,14 +195,14 @@ def verify_in_simulator(
     pulse_family: GaussianDragPulse,
     params: np.ndarray,
     uncertainty: UncertaintyModel,
-    gate: str,
+    target_ir: PulseIR,
     n_theta: int = 200,
     rng_seed: int = 2,
     smooth_sigma_pts: float = 0.0,
 ) -> Dict[str, object]:
     """Full-simulator verification for a pulse across sampled θ."""
     theta = uncertainty.sample(n_theta)
-    V = target_unitary(gate)
+    V = target_ir.unitary_matrix
     ox, oy = pulse_family.sample_controls(params, smooth_sigma_pts=smooth_sigma_pts)
     fs = []
     for th in theta:
