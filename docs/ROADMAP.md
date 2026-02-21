@@ -172,54 +172,7 @@ print(f"Fidelity: {result.fidelity}")
 
 ---
 
-## Phase 5: Interactive Web Frontend 🎨
 
-**Goal:** User-friendly web interface for pulse design and visualization
-
-### 5.1 Frontend Stack
-- **Framework:** Next.js 14+ (React, TypeScript)
-- **Visualization:** Plotly.js or D3.js for waveforms
-- **UI Library:** Tailwind CSS + shadcn/ui
-- **State Management:** Zustand or TanStack Query
-
-### 5.2 Core Features
-- [ ] **Parameter Input Panel:**
-  - Platform selector
-  - Gate selector
-  - Uncertainty sliders (detuning, amplitude errors)
-  - Advanced options (T₁, T₂, pulse family)
-
-- [ ] **Real-time Visualization:**
-  - Live waveform plot (Ωₓ, Ωᵧ vs time)
-  - Bloch sphere animation
-  - Robustness curve (fidelity vs detuning)
-
-- [ ] **Job Management:**
-  - Job queue with status indicators
-  - Historical results browser
-  - Export to JSON/CSV/Python script
-
-- [ ] **Comparison Tool:**
-  - Side-by-side pulse comparison
-  - Standard vs optimized pulse benchmarks
-
-### 5.3 Advanced Features
-- [ ] Drag-and-drop custom Hamiltonian input
-- [ ] Collaborative pulse design (shared workspaces)
-- [ ] Gallery of pre-optimized pulses
-- [ ] Educational mode (tooltips, tutorials)
-
-### 5.4 Deployment
-- [ ] Vercel/Netlify hosting for frontend
-- [ ] CDN for static assets
-- [ ] Analytics (PostHog or Mixpanel)
-
-**Deliverables:**
-- Production web app at autopulsesynth.io
-- Mobile-responsive design
-- Public gallery of benchmark pulses
-
----
 
 ## Phase 6: Hardware Integration 🔌 (Future Vision)
 
@@ -263,7 +216,6 @@ autopulsesynth calibrate \
 | Phase 2 (Generalization) | 4-6 weeks | Phase 1 |
 | Phase 3 (Two-Qubit Gates) | 6-8 weeks | Phase 1, 2 |
 | Phase 4 (API Backend) | 3-4 weeks | Phase 1 |
-| Phase 5 (Web Frontend) | 4-6 weeks | Phase 4 |
 | Phase 6 (Hardware) | 8-12 weeks | Phase 2, 3, 4 |
 
 **Note:** Phases 2-4 can be parallelized. Phase 5 requires Phase 4. Phase 6 requires all others.
@@ -284,10 +236,6 @@ autopulsesynth calibrate \
 - API uptime >99.9%
 - Average job completion time <5 minutes
 
-### Phase 5
-- User adoption: 100+ monthly active users
-- Pulse exports: 500+ per month
-
 ### Phase 6
 - Closed-loop calibration reduces gate error by >50%
 - Compatible with ≥3 commercial quantum hardware providers
@@ -299,7 +247,6 @@ autopulsesynth calibrate \
 We welcome contributions! Priority areas:
 1. Platform-specific pulse families (Phase 2)
 2. Two-qubit gate Hamiltonians (Phase 3)
-3. Frontend components (Phase 5)
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 

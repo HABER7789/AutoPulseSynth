@@ -1,5 +1,7 @@
 # AutoPulseSynth: Robust Quantum Control
 
+![AutoPulseSynth Banner](docs/images/autopulsesynth_banner.png)
+
 **A surrogate-assisted optimization framework for superconducting qubit pulses.**
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -81,7 +83,6 @@ python scripts/plot_robustness.py --input my_pulse.json
 - **Phase 2:** Multi-platform support (trapped ions, neutral atoms, NV centers)
 - **Phase 3:** Two-qubit entangling gates (CZ, CNOT, iSWAP)
 - **Phase 4:** REST API backend for cloud deployment
-- **Phase 5:** Interactive web frontend with live waveform visualization
 
 ---
 
@@ -91,7 +92,7 @@ python scripts/plot_robustness.py --input my_pulse.json
 |----------|-------------|
 | **[CURRENT_STATUS.md](docs/CURRENT_STATUS.md)** | Verified metrics, known issues, testing status |
 | **[TECHNICAL_REPORT.md](docs/TECHNICAL_REPORT.md)** | Physics model, algorithms, optimization details |
-| **[ROADMAP.md](docs/ROADMAP.md)** | Future phases (multi-platform, 2-qubit, API, frontend) |
+| **[ROADMAP.md](docs/ROADMAP.md)** | Future phases (multi-platform, 2-qubit, API) |
 | **[CLI_DEMO.md](docs/CLI_DEMO.md)** | Step-by-step demo script for video recording |
 | **[Notebook](notebooks/01_single_qubit_autopulsesynth.ipynb)** | Interactive tutorial with plots |
 

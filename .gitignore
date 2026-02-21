@@ -13,3 +13,9 @@ __pycache__/
 # OS / editor
 .DS_Store
 .vscode/
+
+# Test results / temporary files
+*_pulse.json
+*_demo.json
+results_*.json
+robustness_plot.png
