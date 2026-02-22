@@ -1,6 +1,6 @@
 # AutoPulseSynth: Quantum Control Optimization
 
-![AutoPulseSynth Banner](docs/images/autopulsesynth_banner.png)
+![AutoPulseSynth Banner](docs/images/image%2024.png)
 
 **A surrogate-assisted optimization framework for determining superconducting qubit pulse parameters under hardware uncertainty.**
 
