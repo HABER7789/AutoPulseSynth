@@ -1,8 +1,8 @@
-# AutoPulseSynth: Robust Quantum Control
+# AutoPulseSynth: Quantum Control Optimization
 
 ![AutoPulseSynth Banner](docs/images/autopulsesynth_banner.png)
 
-**A surrogate-assisted optimization framework for superconducting qubit pulses.**
+**A surrogate-assisted optimization framework for determining superconducting qubit pulse parameters under hardware uncertainty.**
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -25,8 +25,8 @@ AutoPulseSynth synthesizes quantum control pulses that maintain **>96% fidelity*
 pip install -e .
 ```
 
-### 2. Synthesize a Robust Pulse
-Generate an X-gate pulse robust to $\pm 2$ MHz frequency drift (typical for transmon qubits).
+### 2. Synthesize an Optimized Pulse
+Generate an X-gate pulse optimized against $\pm 2$ MHz frequency drift and amplitude fluctuations.
 ```bash
 python -m autopulsesynth.cli synthesize \
     --gate X \
@@ -51,20 +51,20 @@ View detailed metrics of the optimized pulse.
 python -m autopulsesynth.cli analyze --input my_pulse.json
 ```
 
-### 4. Visualize Robustness
+### 4. Visualize Performance
 Generate a fidelity vs detuning curve (compares optimized vs standard Gaussian pulses).
 ```bash
 python scripts/plot_robustness.py --input my_pulse.json
-# Opens robustness_plot.png showing performance across ±20 MHz
+# Opens robustness_plot.png showing performance across detuning ranges
 ```
 
 ---
 
 ## 📸 Visual Overview
 
-### Robustness Visualization
+### Performance Visualization
 ![Robustness Plot](docs/images/03_robustness_plot.png)
-*Optimized pulse (blue) maintains high fidelity across ±20 MHz, while standard Gaussian (red) degrades rapidly.*
+*Optimized pulse (blue) maintains high fidelity across detuning sweeps, while standard Gaussian (red) degrades rapidly.*
 
 > **Note:** For terminal screenshots showing synthesis and analysis outputs, see [docs/images/README.md](docs/images/README.md)
 
