@@ -6,7 +6,7 @@
 
 ---
 
-## ✅ What's Implemented & Working
+## What's Implemented & Working
 
 ### Core Capabilities
 1. **Single-Qubit Gate Synthesis**
@@ -46,7 +46,7 @@
 
 ---
 
-## 📊 Verified Performance Metrics
+## Verified Performance Metrics
 
 ### Test Configuration
 - **Platform:** Superconducting qubit (transmon-like)
@@ -75,9 +75,9 @@
 **Results (from notebook validation):**
 | Metric | Value | Requirement |
 |--------|-------|-------------|
-| **Mean Fidelity** | **97.7%** | >95% ✅ |
-| **Worst-Case Fidelity** | **95.0%** | >90% ✅ |
-| **Std Dev** | **0.99%** | <2% ✅ |
+| **Mean Fidelity** | **97.7%** | >95% (Pass) |
+| **Worst-Case Fidelity** | **95.0%** | >90% (Pass) |
+| **Std Dev** | **0.99%** | <2% (Pass) |
 | **Samples Tested** | 220 | - |
 
 **Detuning Sweep (±2 MHz, other params nominal):**
@@ -99,9 +99,9 @@
 
 ---
 
-## 🎯 Validated Use Cases
+## Validated Use Cases
 
-### ✅ Recommended: Conservative Calibration Drift
+### Recommended: Conservative Calibration Drift
 **Scenario:** Daily frequency drift on superconducting qubits
 **Parameters:**
 - Detuning: ±2 MHz (typical for transmons with flux noise)
@@ -111,7 +111,7 @@
 **Expected Performance:** 95-98% fidelity
 **Status:** **Production-ready**
 
-### ⚠️ Experimental: Larger Frequency Drifts
+### Experimental: Larger Frequency Drifts
 **Scenario:** Uncalibrated qubits or high flux noise environments
 **Parameters:**
 - Detuning: ±10 to ±20 MHz
@@ -120,7 +120,7 @@
 **Expected Performance:** 85-94% fidelity (degrades with larger drift)
 **Status:** **Proof-of-concept** (needs more validation)
 
-### ❌ Not Yet Supported
+### Not Yet Supported
 - Two-qubit entangling gates (CZ, CNOT, iSWAP)
 - Non-superconducting platforms (ions, atoms, NV centers)
 - Hardware-in-the-loop calibration
@@ -128,21 +128,21 @@
 
 ---
 
-## 🔬 Testing & Validation Status
+## Testing & Validation Status
 
 | Test Category | Status | Notes |
 |---------------|--------|-------|
-| Unit Tests (Physics) | ✅ 100% | Pauli matrices, unitary properties |
-| Integration Tests (Optimization) | ⚠️ Partial | Notebook-based, needs pytest suite |
-| Detuning Robustness | ✅ Validated | ±2 MHz thoroughly tested |
-| Amplitude Robustness | ✅ Validated | ±5% tested |
-| Phase Skew | ✅ Validated | ±2% tested |
-| Large Drift (±20 MHz) | ⚠️ Exploratory | Trends shown, not production-validated |
-| Hardware Validation | ❌ Not Started | Simulation-only |
+| Unit Tests (Physics) | 100% | Pauli matrices, unitary properties |
+| Integration Tests (Optimization) | Partial | Notebook-based, needs pytest suite |
+| Detuning Robustness | Validated | ±2 MHz thoroughly tested |
+| Amplitude Robustness | Validated | ±5% tested |
+| Phase Skew | Validated | ±2% tested |
+| Large Drift (±20 MHz) | Exploratory | Trends shown, not production-validated |
+| Hardware Validation | Not Started | Simulation-only |
 
 ---
 
-## 🐛 Known Issues & Limitations
+## Known Issues & Limitations
 
 ### 1. Platform-Specific Design
 - **Issue:** DRAG pulses are optimized for superconducting qubits (leakage suppression)
@@ -171,7 +171,7 @@
 
 ---
 
-## 📦 Deliverables (Phase 1)
+## Deliverables (Phase 1)
 
 ### Code
 - [x] `autopulsesynth/` package (installable via pip)
@@ -193,7 +193,7 @@
 
 ---
 
-## 🚀 Next Steps (Immediate)
+## Next Steps (Immediate)
 
 ### Short-Term (1-2 weeks)
 1. **Formal Validation:**
@@ -218,28 +218,28 @@
 
 ---
 
-## 📚 Reference Performance Summary
+## Reference Performance Summary
 
 **For LinkedIn/Publications, use these verified claims:**
 
-✅ **ACCURATE:**
+**ACCURATE:**
 - "Surrogate-assisted optimization achieves R²=0.996 predictive accuracy"
 - "Optimized X-gate pulses maintain 95% worst-case fidelity under ±2 MHz frequency drift and ±5% amplitude errors"
 - "Framework tested on superconducting qubit model (transmon) with 40ns pulse duration"
 - "Mean fidelity of 97.7% across 220 uncertainty samples (T₁=15μs)"
 
-⚠️ **USE WITH CAUTION:**
+**USE WITH CAUTION:**
 - "Framework gracefully handles larger uncertainty ranges" (true but vague)
 - "Maintains ~88-90% fidelity at ±20 MHz drift" (preliminary, needs formal validation)
 
-❌ **AVOID:**
+**AVOID:**
 - "Works on all qubit platforms" (false - superconducting only)
 - "Production-ready for hardware deployment" (false - simulation only)
 - "Real-time pulse optimization" (false - takes minutes per pulse)
 
 ---
 
-## 📞 Contact & Contribution
+## Contact & Contribution
 
 **Maintainer:** HABER
 **Repository:** https://github.com/HABER7789/AutoPulseSynth

@@ -1,6 +1,6 @@
 # AutoPulseSynth: Development Roadmap
 
-## Current Status: Phase 1 ✅ COMPLETE
+## Current Status: Phase 1 (COMPLETE)
 
 **What's Working:**
 - Single-qubit gate synthesis (X, SX gates)
@@ -26,7 +26,7 @@
 
 ---
 
-## Phase 2: Platform Generalization 🎯
+## Phase 2: Platform Generalization
 
 **Goal:** Extend framework to support multiple qubit platforms
 
@@ -77,7 +77,7 @@ autopulsesynth synthesize \
 
 ---
 
-## Phase 3: Two-Qubit Entangling Gates 🔗
+## Phase 3: Two-Qubit Entangling Gates
 
 **Goal:** Extend to two-qubit systems with realistic coupling
 
@@ -121,7 +121,7 @@ autopulsesynth synthesize \
 
 ---
 
-## Phase 4: Backend API & Cloud Integration ☁️
+## Phase 4: Backend API & Cloud Integration
 
 **Goal:** RESTful API for programmatic access and cloud deployment
 
@@ -174,7 +174,7 @@ print(f"Fidelity: {result.fidelity}")
 
 
 
-## Phase 6: Hardware Integration 🔌 (Future Vision)
+## Phase 6: Hardware Integration (Future Vision)
 
 **Long-term Goal:** Closed-loop pulse calibration on real hardware
 
@@ -212,7 +212,7 @@ autopulsesynth calibrate \
 
 | Phase | Duration | Dependencies |
 |-------|----------|--------------|
-| Phase 1 (Complete) | ✅ | - |
+| Phase 1 (Complete) | (Completed) | - |
 | Phase 2 (Generalization) | 4-6 weeks | Phase 1 |
 | Phase 3 (Two-Qubit Gates) | 6-8 weeks | Phase 1, 2 |
 | Phase 4 (API Backend) | 3-4 weeks | Phase 1 |

@@ -11,14 +11,14 @@
 AutoPulseSynth synthesizes quantum control pulses that maintain **>96% fidelity** even under calibration drift. It uses machine learning (Random Forest surrogates) to efficiently search the control landscape for robust pulse parameters.
 
 **Verified Performance:**
-- ✅ **98.5% mean fidelity** under ±2 MHz frequency drift + ±5% amplitude errors
-- ✅ **96.8% worst-case fidelity** across 64 uncertainty samples
-- ✅ **R²=0.90** surrogate model accuracy
-- ✅ Tested with QuTiP's Lindblad solver (T₁=15μs decoherence)
+- **98.5% mean fidelity** under ±2 MHz frequency drift + ±5% amplitude errors
+- **96.8% worst-case fidelity** across 64 uncertainty samples
+- **R²=0.90** surrogate model accuracy
+- Tested with QuTiP's Lindblad solver (T₁=15μs decoherence)
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Installation
 ```bash
@@ -60,7 +60,7 @@ python scripts/plot_robustness.py --input my_pulse.json
 
 ---
 
-## 📸 Visual Overview
+## Visual Overview
 
 ### Performance Visualization
 ![Robustness Plot](docs/images/03_robustness_plot.png)
@@ -70,23 +70,23 @@ python scripts/plot_robustness.py --input my_pulse.json
 
 ---
 
-## 📊 What Can AutoPulseSynth Do?
+## What Can AutoPulseSynth Do?
 
-### ✅ Currently Supported (Phase 1)
+### Currently Supported (Phase 1)
 - **Gates:** Single-qubit X and SX (sqrt-X) rotations
 - **Platform:** Superconducting qubits (transmon-like, 40ns gates)
 - **Error Models:** Frequency detuning, amplitude drift, phase skew
 - **Simulation:** QuTiP-based (closed and open systems with T₁/T₂)
 - **Output:** JSON pulse specifications with waveform samples
 
-### 🚧 Coming Soon (See [Roadmap](docs/ROADMAP.md))
+### Coming Soon (See [Roadmap](docs/ROADMAP.md))
 - **Phase 2:** Multi-platform support (trapped ions, neutral atoms, NV centers)
 - **Phase 3:** Two-qubit entangling gates (CZ, CNOT, iSWAP)
 - **Phase 4:** REST API backend for cloud deployment
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 | Document | Description |
 |----------|-------------|
@@ -98,7 +98,7 @@ python scripts/plot_robustness.py --input my_pulse.json
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 ```
 AutoPulseSynth/
 ├── autopulsesynth/          # Core Python package
@@ -117,7 +117,7 @@ AutoPulseSynth/
 
 ---
 
-## 🎓 Citation
+## Citation
 
 If you use AutoPulseSynth in your research, please cite:
 
@@ -132,7 +132,7 @@ If you use AutoPulseSynth in your research, please cite:
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions welcome! Priority areas:
 - Platform-specific pulse families (Phase 2)
@@ -143,10 +143,6 @@ See [ROADMAP.md](docs/ROADMAP.md) for details.
 
 ---
 
-## 📜 License
+## License
 
 MIT License - See [LICENSE](LICENSE) for details.
-
----
-
-*Built for the Advanced Agentic Coding Challenge.*
