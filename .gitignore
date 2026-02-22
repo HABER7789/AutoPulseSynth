@@ -18,4 +18,8 @@ __pycache__/
 *_pulse.json
 *_demo.json
 results_*.json
+*.json
 robustness_plot.png
+
+# AI generated or export files
+LINKEDIN_POST.md
