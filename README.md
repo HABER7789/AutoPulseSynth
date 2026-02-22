@@ -66,7 +66,6 @@ python scripts/plot_robustness.py --input my_pulse.json
 ![Robustness Plot](docs/images/03_robustness_plot.png)
 *Optimized pulse (blue) maintains high fidelity across detuning sweeps, while standard Gaussian (red) degrades rapidly.*
 
-> **Note:** For terminal screenshots showing synthesis and analysis outputs, see [docs/images/README.md](docs/images/README.md)
 
 ---
 
@@ -93,7 +92,6 @@ python scripts/plot_robustness.py --input my_pulse.json
 | **[CURRENT_STATUS.md](docs/CURRENT_STATUS.md)** | Verified metrics, known issues, testing status |
 | **[TECHNICAL_REPORT.md](docs/TECHNICAL_REPORT.md)** | Physics model, algorithms, optimization details |
 | **[ROADMAP.md](docs/ROADMAP.md)** | Future phases (multi-platform, 2-qubit, API) |
-| **[CLI_DEMO.md](docs/CLI_DEMO.md)** | Step-by-step demo script for video recording |
 | **[Notebook](notebooks/01_single_qubit_autopulsesynth.ipynb)** | Interactive tutorial with plots |
 
 ---
