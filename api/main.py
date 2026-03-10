@@ -44,6 +44,7 @@ class SynthesisRequest(BaseModel):
     n_theta_train: int = Field(5, ge=1, le=20)
     seed: int = 42
     boulder_opal_key: Optional[str] = None
+    quick: bool = False
 
 @app.post("/api/synthesize")
 def synthesize_pulse(req: SynthesisRequest):
@@ -80,14 +81,22 @@ def synthesize_pulse(req: SynthesisRequest):
 
         surrogate, metrics = train_surrogate(dataset, rng_seed=req.seed)
 
+        # Quick mode: fewer DE iterations for fast demo
+        de_maxiter = 15 if req.quick else 120
+        de_popsize = 8 if req.quick else 18
+        n_theta_eval = 8 if req.quick else 64
+        n_theta_verify = 16 if req.quick else 128
+
         opt_res = optimize_under_uncertainty(
             pulse_family=pulse,
             surrogate=surrogate,
             uncertainty=uncertainty,
             mode="worst",
             target_ir=target_ir,
-            n_theta_eval=64,
-            rng_seed=req.seed
+            n_theta_eval=n_theta_eval,
+            rng_seed=req.seed,
+            maxiter=de_maxiter,
+            popsize=de_popsize
         )
 
         verify_res = verify_in_simulator(
@@ -96,7 +105,7 @@ def synthesize_pulse(req: SynthesisRequest):
             params=opt_res["best_params"],
             uncertainty=uncertainty,
             target_ir=target_ir,
-            n_theta=128,
+            n_theta=n_theta_verify,
             rng_seed=req.seed+1
         )
 

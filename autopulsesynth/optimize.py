@@ -148,6 +148,8 @@ def optimize_under_uncertainty(
     target_ir: PulseIR = None,
     n_theta_eval: int = 64,
     rng_seed: int = 1,
+    maxiter: int = 120,
+    popsize: int = 18,
 ) -> Dict[str, object]:
     """Optimize pulse parameters on surrogate, return best params and predicted fidelity."""
     rng = np.random.default_rng(rng_seed)
@@ -161,8 +163,8 @@ def optimize_under_uncertainty(
     obj,
     bounds=bounds,
     seed=rng_seed,
-    maxiter=120,
-    popsize=18,
+    maxiter=maxiter,
+    popsize=popsize,
     polish=True,
     tol=1e-4,
     updating="immediate",

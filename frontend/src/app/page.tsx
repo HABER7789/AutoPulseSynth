@@ -46,7 +46,7 @@ export default function AutoPulseDashboard() {
     return () => clearInterval(interval);
   }, [loading]);
 
-  const handleSynthesize = async (e: React.FormEvent) => {
+  const handleSynthesize = async (e: React.FormEvent, quick: boolean = false) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -57,9 +57,10 @@ export default function AutoPulseDashboard() {
         duration: parseFloat(duration) * 1e-6, 
         det_max_hz: parseFloat(detMax) * 1e6,
         det_min_hz: -parseFloat(detMax) * 1e6,
-        n_train: 150, 
-        n_theta_train: 3,
-        boulder_opal_key: boKey.trim() !== "" ? boKey : null
+        n_train: quick ? 30 : 150, 
+        n_theta_train: quick ? 2 : 3,
+        boulder_opal_key: boKey.trim() !== "" ? boKey : null,
+        quick: quick
       };
 
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -291,6 +292,17 @@ export default function AutoPulseDashboard() {
                     <Play size={14} className="mr-2 fill-current" /> Run Surrogate Optimization
                   </span>
                 )}
+              </button>
+
+              <button 
+                type="button"
+                disabled={loading}
+                onClick={(e) => handleSynthesize(e, true)}
+                className={`w-full flex items-center justify-center py-2.5 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-all mt-2 ${
+                  loading ? theme.btnDisabled + ' cursor-not-allowed' : (isDark ? 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/10' : 'bg-black/5 text-black/50 hover:bg-black/10 border border-black/10') + ' active:scale-[0.98]'
+                }`}
+              >
+                <Play size={12} className="mr-2 fill-current" /> Quick Demo (~15s)
               </button>
             </form>
 
