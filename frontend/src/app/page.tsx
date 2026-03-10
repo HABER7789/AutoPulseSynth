@@ -57,8 +57,8 @@ export default function AutoPulseDashboard() {
         duration: parseFloat(duration) * 1e-6, 
         det_max_hz: parseFloat(detMax) * 1e6,
         det_min_hz: -parseFloat(detMax) * 1e6,
-        n_train: 150, 
-        n_theta_train: 3,
+        n_train: 50, 
+        n_theta_train: 2,
         boulder_opal_key: boKey.trim() !== "" ? boKey : null
       };
 
