@@ -159,9 +159,18 @@ export default function AutoPulseDashboard() {
             <ul className={`text-[13px] font-medium space-y-4 leading-relaxed ${theme.textMuted}`}>
               <li><strong className={theme.textMain}>1. Target Gate</strong>: Select the quantum operation (e.g. $\pi$-pulse) to execute on the target physical qubit.</li>
               <li><strong className={theme.textMain}>2. Duration</strong>: The operational time window (e.g. 40ns) for the gate. Pushing this below hardware limits (&lt;20ns) risks significant leakage to non-computational states due to the massive required driving amplitude $\Omega(t)$.</li>
-              <li><strong className={theme.textMain}>3. Drift Bounds</strong>: The estimated stochastic frequency drift (e.g. charge noise / TLS defects). The ML surrogate searches for a DRAG envelope that maintains &gt;99% mean fidelity across this entire detuning window.</li>
+              <li><strong className={theme.textMain}>3. Drift Bounds (± MHz)</strong>: The estimated symmetric frequency drift from charge noise / TLS defects. The optimizer finds a DRAG envelope that maximizes worst-case fidelity across this entire detuning window.</li>
               <li><strong className={theme.textMain}>4. Hardware Output</strong>: The output plot represents the exact digital array needed by the lab's Arbitrary Waveform Generator (AWG) to synthesize and IQ-mix the microwave burst sent down the dilution refrigerator.</li>
             </ul>
+            <div className={`mt-6 pt-4 border-t ${theme.border}`}>
+              <h4 className={`text-[12px] font-bold uppercase tracking-wider mb-3 ${theme.textMain}`}>Typical Lab Parameters</h4>
+              <div className={`text-[12px] font-mono space-y-1.5 ${theme.textMuted}`}>
+                <div className="flex justify-between"><span>Standard (IBM/Google)</span><span>0.04 µs, ±2 MHz</span></div>
+                <div className="flex justify-between"><span>Aggressive</span><span>0.02 µs, ±1 MHz</span></div>
+                <div className="flex justify-between"><span>Conservative</span><span>0.10 µs, ±3 MHz</span></div>
+                <div className="flex justify-between"><span>Stress test</span><span>0.01 µs, ±5 MHz</span></div>
+              </div>
+            </div>
           </div>
         </div>
       )}
