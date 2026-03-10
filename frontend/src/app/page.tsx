@@ -14,6 +14,11 @@ export default function AutoPulseDashboard() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
   const [dismissWarning, setDismissWarning] = useState(false);
+  const [isLocal, setIsLocal] = useState(false);
+
+  useEffect(() => {
+    setIsLocal(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  }, []);
   
   // Form State
   const [gate, setGate] = useState("X");
@@ -242,13 +247,19 @@ export default function AutoPulseDashboard() {
                     <span>Q-CTRL API Key</span>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-500' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>Optional</span>
                   </label>
-                  <input 
-                    type="password" 
-                    placeholder="Enter key for BO validation..."
-                    value={boKey}
-                    onChange={(e) => setBoKey(e.target.value)}
-                    className={`w-full rounded-md px-3 py-2 text-sm font-medium transition-colors border focus:outline-none ${theme.input}`}
-                  />
+                  {isLocal ? (
+                    <input 
+                      type="password" 
+                      placeholder="Enter key for BO validation..."
+                      value={boKey}
+                      onChange={(e) => setBoKey(e.target.value)}
+                      className={`w-full rounded-md px-3 py-2 text-sm font-medium transition-colors border focus:outline-none ${theme.input}`}
+                    />
+                  ) : (
+                    <div className={`w-full rounded-md px-3 py-2 text-[11px] font-medium border ${isDark ? 'bg-zinc-900/50 border-zinc-800 text-zinc-500' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
+                      Boulder Opal cross-validation requires OAuth and is available in local mode only. Clone the repo and run <code className="font-mono">./run.sh</code> to enable.
+                    </div>
+                  )}
                 </div>
               </div>
 
