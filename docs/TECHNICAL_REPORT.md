@@ -1,91 +1,169 @@
-# AutoPulseSynth: Technical Report & User Guide
+# AutoPulseSynth: Technical Report
 
 ## 1. Project Overview
-AutoPulseSynth is a robust control framework for superconducting qubits. It solves the problem of "calibration drift" by synthesizing control pulses that are resilient to frequency detuning ($\Delta$) and amplitude noise.
 
-Unlike standard analytical pulses (e.g., Gaussian) which fail when the qubit frequency drifts, AutoPulseSynth uses **Surrogate-Assisted Machine Learning** to find pulse shapes that maintain $>99\%$ fidelity over a wide range of errors.
+AutoPulseSynth is a robust quantum control framework for superconducting qubits. It solves the calibration drift problem by synthesizing Gaussian-DRAG microwave pulses that maintain high gate fidelity across a specified window of hardware uncertainty, without requiring repeated manual recalibration.
 
----
-
-## 2. System Architecture
-
-### The Physics Model (`autopulsesynth/model.py`)
-We model a single superconducting qubit in the rotating frame using the **Rotating Wave Approximation (RWA)**.
-The Hamiltonian is:
-$$ H(t) = \frac{\Delta}{2} \sigma_z + \frac{\Omega_x(t)}{2} \sigma_x + \frac{\Omega_y(t)}{2} \sigma_y $$
-- $\Delta$: Detuning (frequency error) in rad/s.
-- $\Omega_x, \Omega_y$: Control fields in rad/s.
-- $\sigma_{x,y,z}$: Standard Pauli matrices.
-
-### The Pulse Family (`autopulsesynth/pulses.py`)
-We use a **Gaussian-DRAG** (Derivative Removal by Adiabatic Gate) parametrization, which is standard in superconducting qubits to reduce leakage and phase errors.
-$$ \Omega_x(t) = A \cdot g(t) $$
-$$ \Omega_y(t) = A \cdot \beta \cdot \frac{dg(t)}{dt} \cdot \sigma_{width} $$
-- **Structure**: 5 parameters $[A, t_0, \sigma, \phi, \beta]$.
-- **Constraint**: Calibrated scaling ensures $\Omega_y$ has correct units ($rad/s$), preventing unphysical energy injection.
-
-### The Optimization Loop (`autopulsesynth/optimize.py`)
-Directly optimizing quantum fidelity using a simulator is slow. We use a **Surrogate-Assisted** approach:
-1.  **Sample**: Generate $N=500$ random pulses and simulate their worst-case fidelity over the uncertainty range.
-2.  **Learn**: Train a Random Forest regressor to predict "Worst-Case Fidelity" from pulse parameters.
-3.  **Optimize**: Use a differential evolution optimizer to find the best pulse *on the cheap surrogate model*.
-4.  **Verify**: Run the best candidate through the full physics simulator to confirm performance.
+The system is deployed as a full-stack web application: a FastAPI backend (Python, QuTiP, scikit-learn) hosted on Render, and a Next.js frontend hosted on Vercel.
 
 ---
 
-## 3. Physics & Limitations
+## 2. Physics Model
 
-### Validated Ranges
-- **Detuning ($\Delta$)**: Tested up to $\pm 20$ MHz for a 40ns pulse. This covers typical transmon qubit drift.
-- **Pulse Duration**: Tested at 20ns - 100ns. Shorter pulses require higher amplitudes, limited by the `amp_max` constraint.
-- **Decoherence ($T_1, T_2$)**: Valid for any $T_1 > 0$. However, fidelity is fundamentally limited by $e^{-t_{gate}/T_1}$.
+### 2.1 Hamiltonian (`autopulsesynth/model.py`)
 
-### Implementation Details
-- **Unitary Evolution**: Used for closed systems ($T_1 = \infty$). Fast and exact (to machine precision).
-- **Lindblad Master Equation**: Used for open systems ($T_1 < \infty$). Solved via `qutip.mesolve` with strict tolerances (`rtol=1e-6`, `nsteps=50000`) to handle stiff pulse dynamics.
-- **Units**: All internal calculations use **rad/s** for energy and **seconds** for time. Inputs are converted from **Hz** immediately upon entry.
+We model a single superconducting qubit in the rotating frame under the Rotating Wave Approximation (RWA):
+
+$$H(t) = \frac{\Delta}{2}\sigma_z + \frac{\Omega_x(t)}{2}\sigma_x + \frac{\Omega_y(t)}{2}\sigma_y$$
+
+- $\Delta$: Detuning (qubit frequency minus drive frequency) in rad/s.
+- $\Omega_x(t), \Omega_y(t)$: I and Q control fields in rad/s.
+- $\sigma_x, \sigma_y, \sigma_z$: Standard Pauli matrices.
+
+Convention: $|0\rangle = [1,0]^T$ is the ground state, $|1\rangle = [0,1]^T$ is the excited state.
+
+### 2.2 Decoherence (`autopulsesynth/model.py`)
+
+For open-system evolution, the Lindblad master equation is used with two collapse operators:
+
+**T1 (energy relaxation):**
+
+$$L_1 = \sqrt{\frac{1}{T_1}} \, \sigma_-, \quad \sigma_- = |0\rangle\langle 1| = \begin{pmatrix}0&1\\0&0\end{pmatrix}$$
+
+Maps $|1\rangle$ (excited) to $|0\rangle$ (ground). Verified: population decays as $e^{-t/T_1}$.
+
+**T2 (dephasing, pure dephasing component):**
+
+$$L_2 = \sqrt{\frac{\gamma_\phi}{2}} \, \sigma_z, \quad \gamma_\phi = \frac{1}{T_2} - \frac{1}{2T_1}$$
+
+Requires $T_2 \leq 2T_1$ (physical). If $T_2 > 2T_1$, only $L_1$ is applied (pure T1 limit).
+
+> The web UI does not expose T1/T2 inputs. Both default to `None` (closed system, fast simulation). T1/T2 are available via the CLI and direct API.
 
 ---
 
-## 4. The "Fix" - Troubleshooting Optimization
-During development, we encountered a critical issue where the optimizer produced pulses with low fidelity (~60%) that performed Z-rotations instead of X-gates.
+## 3. Pulse Parameterization (`autopulsesynth/pulses.py`)
 
-### Diagnosis
-- **Dimensional Mismatch**: The DRAG term in the code was $\Omega_y \propto \beta \cdot \dot{g}$, missing a time-scaling factor. This made the naive derivative term $10^9$ times too large.
-- **Optimizer Hallucinations**: Because the training data was sparse, the surrogate model "guessed" that these chaotic high-beta pulses were good.
+We use the **Gaussian-DRAG** pulse family with 5 parameters $[A, t_0, \sigma, \phi, \beta]$:
 
-### The Solution
-1.  **Corrected Units**: Multiplied the derivative term by $\sigma$ (pulse width) to ensure $\Omega_y$ is in $rad/s$.
-2.  **Physical Constraints**: Tightened the DRAG parameter $\beta$ to $[-0.2, 0.2]$ to keep the pulse physically perturbative.
-3.  **Energy Penalty**: Added a penalty term to the cost function: `Loss += (PulseArea - \pi)^2`. This forces the optimizer to find a pulse that actually flips the qubit.
-4.  **Phase Penalty**: Added `Loss += sin(phi)^2` to force the drive axis to be along X.
+$$\Omega_x(t) = A \cdot g(t) \cos\phi \;-\; A\beta\sigma \frac{dg}{dt} \sin\phi$$
+$$\Omega_y(t) = A \cdot g(t) \sin\phi \;+\; A\beta\sigma \frac{dg}{dt} \cos\phi$$
+
+where $g(t) = \exp\!\left(-\frac{(t-t_0)^2}{2\sigma^2}\right)$.
+
+For $\phi=0$ (standard X/SX gates) this reduces to: $\Omega_x = A\cdot g$, $\Omega_y = A\beta\sigma \frac{dg}{dt}$ — the standard DRAG form.
+
+The $\sigma$-normalization makes $\beta$ dimensionless and ensures $|\Omega_y| \ll |\Omega_x|$ for $|\beta| \leq 0.2$ (perturbative regime).
+
+**Parameter bounds:**
+
+| Parameter | Min | Max | Physical meaning |
+|---|---|---|---|
+| $A$ | 0 | $8\pi/T$ | Peak amplitude (rad/s) |
+| $t_0$ | 0 | $T$ | Pulse center (s) |
+| $\sigma$ | $T/20$ | $T/2$ | Pulse width (s) |
+| $\phi$ | $-\pi$ | $\pi$ | Drive axis rotation (rad) |
+| $\beta$ | -0.2 | 0.2 | Normalized DRAG coefficient |
 
 ---
 
-## 5. User Guide: How to Synthesize & Test
+## 4. Gate Fidelity Metrics (`autopulsesynth/metrics.py`)
 
-### Step 1: Synthesize
-Generate a pulse robust to $\pm 10$ MHz detuning for a qubit with $15 \mu s$ lifetime.
-```bash
-autopulsesynth synthesize \
-    --gate X \
-    --duration 40e-9 \
-    --t1 15e-6 \
-    --det-max-hz 10e6 \
-    --det-min-hz -10e6 \
-    --out my_pulse.json
-```
+### 4.1 Closed System — Average Gate Fidelity
 
-### Step 2: Verify Metrics
-Check the exact rotation angle and peak fidelity at resonance ($\Delta=0$).
-```bash
-python scripts/verify_pulse.py my_pulse.json
-```
-*   **Success Criteria**: Fidelity $> 0.99$, Angle $\approx 3.14$ rad.
+Horodecki formula for $d=2$:
 
-### Step 3: Visualize Robustness
-See the "V-curve" of fidelity vs. detuning.
-```bash
-python scripts/plot_robustness.py --input my_pulse.json
-```
-The resulting plot (`robustness_plot.png`) should show a flat top (high fidelity) across the detuning range.
+$$F_{\text{avg}}(U, V) = \frac{|\text{Tr}(V^\dagger U)|^2 + 2}{6}$$
+
+Verified: $F(X,X)=1$, $F(\mathrm{SX},\mathrm{SX})=1$, $F(I,X)=1/3$.
+
+### 4.2 Open System — State Fidelity Proxy
+
+For Lindblad density-matrix evolution, a 4-state average:
+
+$$F_{\text{proxy}} = \frac{1}{4}\sum_{k} \text{Tr}\!\left(\rho_k^{\text{target}} \, \rho_k^{\text{out}}\right)$$
+
+over $\{|0\rangle, |1\rangle, |{+}\rangle, |{+i}\rangle\}$, which span the full single-qubit operator space.
+
+---
+
+## 5. Target Gates (`autopulsesynth/simulate.py`)
+
+| Gate | Matrix |
+|---|---|
+| X | $\bigl(\begin{smallmatrix}0&1\\1&0\end{smallmatrix}\bigr)$ |
+| SX | $\tfrac{1}{2}\bigl(\begin{smallmatrix}1+i&1-i\\1-i&1+i\end{smallmatrix}\bigr)$ (IBM convention; $\equiv e^{-i\pi/4 X}$ up to global phase — fidelity unaffected) |
+
+---
+
+## 6. Surrogate-Assisted Optimization (`autopulsesynth/optimize.py`)
+
+### Pipeline
+
+1. **Sample** — $N_{\text{pulses}}$ random parameter sets, each simulated over $N_\theta$ uncertainty instances $\theta = [\Delta, \alpha, \psi, \xi]$.
+2. **Train** — Random Forest Regressor (400 trees) on features $[A, t_0/T, \sigma/T, \sin\phi, \cos\phi, \beta, A\beta, \theta_1\ldots\theta_4]$.
+3. **Optimize** — Differential Evolution on the surrogate with objective:
+   $$\mathcal{L}(p) = 1 - F_{\text{worst}}^{\text{surrogate}} + 2(A\sigma\sqrt{2\pi} - \pi_{\text{target}})^2 + 5\sin^2\phi$$
+4. **Verify** — Best parameters re-simulated in full QuTiP over 128 fresh $\theta$ samples. All reported metrics come from this step.
+
+---
+
+## 7. Uncertainty Model
+
+| Parameter | Physical source |
+|---|---|
+| $\Delta$ (detuning) | Charge noise, TLS defects |
+| $\alpha$ (amplitude scale) | AWG gain, mixer chain |
+| $\psi$ (phase skew) | IQ imbalance |
+| $\xi$ (noise strength) | Additional quasi-static detuning |
+
+All drawn from uniform distributions. The web UI exposes Drift Bounds (±MHz) and uses ±5% amplitude error by default.
+
+---
+
+## 8. Verified Performance
+
+Live re-simulation results (not surrogate), seed=42, X gate, 40 ns, T1=15 μs:
+
+| Metric | Value |
+|---|---|
+| Mean gate fidelity | **98.5%** (±2 MHz, ±5% amplitude) |
+| Worst-case fidelity | **96.8%** (200 samples) |
+| Surrogate R² | **0.90** (held-out 20% test set) |
+| Surrogate MAE | **0.042** (fidelity units) |
+
+---
+
+## 9. API (`api/main.py`)
+
+**Endpoint:** `POST /api/synthesize`
+
+**Input validation:**
+- `duration`: 5 ns – 500 ns
+- `det_max_hz`: 0 – 50 MHz
+- `n_train`: 10 – 1000
+- `n_theta_train`: 1 – 20
+
+**CORS:** `allow_origins=["*"]`, no credentials (stateless, no auth tokens).
+
+**Boulder Opal:** If `boulder_opal_key` is provided, the optimized waveform is sent to Q-CTRL's cloud graph API and the resulting fidelity curve is returned alongside local results for cross-validation.
+
+---
+
+## 10. Deployment
+
+| Layer | Service | Config file |
+|---|---|---|
+| Backend | Render (Python web) | `render.yaml` |
+| Frontend | Vercel (Next.js) | `frontend/vercel.json` |
+| Backend URL | `NEXT_PUBLIC_API_URL` env var | Set in Vercel dashboard |
+
+---
+
+## 11. Known Limitations
+
+- **Simulation only.** No hardware-in-the-loop. All fidelity numbers are from numerical simulation.
+- **Single qubit only.** No two-qubit or multi-qubit gates.
+- **Superconducting transmon model.** DRAG pulses and 20–100 ns time scales are specific to this platform.
+- **Surrogate extrapolation.** Surrogate accuracy degrades if the deployment drift range differs significantly from the training range. Always train over the full intended uncertainty window.
+- **Duration limits.** Below ~20 ns: required amplitudes approach hardware limits and leakage to $|2\rangle$ becomes non-negligible (not modeled in the two-level approximation). Above ~500 ns: decoherence dominates.

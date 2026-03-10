@@ -116,7 +116,8 @@ def target_unitary(name: str) -> np.ndarray:
     if name == "X":
         return np.array([[0, 1], [1, 0]], dtype=complex)
     if name in ("SX", "SQRTX", "SQRX"):
-        # sqrt(X) = exp(-i pi/4 X)
+        # SX gate (IBM convention): equivalent to exp(-i pi/4 X) up to global phase e^{i pi/4}.
+        # Satisfies SX^2 = X. Global phase does not affect fidelity calculations.
         return 0.5 * np.array([[1+1j, 1-1j], [1-1j, 1+1j]], dtype=complex)
     raise ValueError(f"Unknown gate {name}")
 

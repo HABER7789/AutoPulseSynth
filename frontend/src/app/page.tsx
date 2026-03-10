@@ -62,7 +62,8 @@ export default function AutoPulseDashboard() {
         boulder_opal_key: boKey.trim() !== "" ? boKey : null
       };
 
-      const res = await fetch("http://localhost:8000/api/synthesize", {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await fetch(`${API_URL}/api/synthesize`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -122,7 +123,7 @@ export default function AutoPulseDashboard() {
             <span className={`text-lg font-bold tracking-tight ${theme.textMain}`}>AutoPulseSynth</span>
           </div>
           <div className="flex items-center space-x-6">
-            <a href="https://github.com/haber/AutoPulseSynth" target="_blank" rel="noreferrer" className={`text-sm font-semibold ${theme.textMuted} hover:${theme.textMain} transition-colors`}>Documentation</a>
+            <a href="https://github.com/HABER7789/AutoPulseSynth" target="_blank" rel="noreferrer" className={`text-sm font-semibold ${theme.textMuted} hover:${theme.textMain} transition-colors`}>Documentation</a>
             <span className={`px-2.5 py-1 ${theme.cardAlt} border ${theme.border} rounded-md text-xs font-bold ${theme.textMuted}`}>v2.0.0</span>
             <button 
               onClick={() => setIsDark(!isDark)} 
@@ -461,7 +462,7 @@ export default function AutoPulseDashboard() {
                            x: results.plot_data.time_ns,
                            y: results.plot_data.i_wave,
                            type: 'scatter',
-                           mode: 'Lines',
+                           mode: 'lines',
                            line: {color: theme.plotLineMain, width: 1.5, shape: 'spline'},
                            name: 'I (In-phase)',
                            fill: 'tozeroy',

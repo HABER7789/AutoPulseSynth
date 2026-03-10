@@ -9,7 +9,7 @@ setup(
     install_requires=[
         "numpy>=1.20",
         "scipy>=1.7",
-        "qutip>=4.6",
+        "qutip>=5.0",
         "scikit-learn>=1.0",
         "matplotlib",  # for analysis plotting if needed
     ],
