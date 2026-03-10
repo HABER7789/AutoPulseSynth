@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Play, Info, CheckCircle2, Cpu, Sun, Moon, ChevronRight, X } from 'lucide-react';
+import { Play, Info, CheckCircle2, Cpu, Sun, Moon, ChevronRight, X, AlertTriangle } from 'lucide-react';
 import SignalConvergence from '@/components/SignalConvergence';
 
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false, loading: () => <div className="h-64 flex items-center justify-center text-zinc-500 font-mono text-xs">Initializing engine...</div> });
@@ -561,6 +561,20 @@ export default function AutoPulseDashboard() {
             {results && !error && (
               <div className={`flex flex-col space-y-4 h-full transition-opacity duration-500 ${loading ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
                 
+                {results.baseline_comparison?.used_baseline_fallback && (
+                  <div className={`shrink-0 flex items-start px-4 py-3 rounded-xl border ${isDark ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-50 border-amber-200 text-amber-700'}`}>
+                    <div className="mr-3 mt-0.5">
+                      <AlertTriangle size={16} />
+                    </div>
+                    <div>
+                      <h4 className="text-[12px] font-bold uppercase tracking-wider mb-0.5">Safeguard Triggered: Baseline Fallback</h4>
+                      <p className="text-[11px] font-medium opacity-90 leading-relaxed">
+                        The surrogate model (R²={results.metrics.r2.toFixed(3)}) was insufficiently accurate for this parameter space to beat a calibrated analytical pulse. As a safeguard, the pipeline automatically fell back to the gate-aware analytical baseline to ensure optimal fidelity.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Minimal Metrics Row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
                   <div className={`${theme.card} border ${theme.border} rounded-xl p-5 flex flex-col justify-between transition-colors duration-300`}>

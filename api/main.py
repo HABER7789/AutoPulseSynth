@@ -480,6 +480,11 @@ async def synthesize_stream(
                     "f_worst": verify_res["f_worst"],
                     "f_std": verify_res["f_std"],
                 },
+                "baseline_comparison": {
+                    "used_baseline_fallback": used_baseline_fallback,
+                    "baseline_f_mean": base_verify["f_mean"],
+                    "baseline_f_worst": base_verify["f_worst"],
+                },
                 "plot_data": {
                     "time_ns": (time_grid * 1e9).tolist(),
                     "i_wave": ox_opt.tolist(),
