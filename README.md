@@ -11,10 +11,7 @@
 
 AutoPulseSynth synthesizes Gaussian-DRAG microwave control pulses for superconducting qubits that remain robust under hardware calibration drift (charge noise, TLS defects). A Random Forest surrogate model trained over QuTiP physics simulations drives a Differential Evolution optimizer to find pulse parameters that maximize worst-case fidelity across a specified uncertainty window.
 
-**Verified Performance (re-simulated, seed=42, 40 ns X gate, T₁=15 μs):**
-- **98.5% mean gate fidelity** under ±2 MHz frequency drift + ±5% amplitude errors
-- **96.8% worst-case fidelity** across 200 uncertainty samples
-- **R²=0.90** surrogate predictive accuracy on held-out test set
+**Live Demo:** [auto-pulse-synth.vercel.app](https://auto-pulse-synth.vercel.app)
 
 ---
 
@@ -30,17 +27,38 @@ The resulting waveform arrays are loaded directly into an **Arbitrary Waveform G
 
 ## Quick Start
 
-### 1. Backend (FastAPI + QuTiP simulation engine)
+### One-Command Launch
 
 ```bash
-# From the repository root
-pip install -r requirements-api.txt
-uvicorn api.main:app --reload
+git clone https://github.com/HABER7789/AutoPulseSynth.git
+cd AutoPulseSynth
+./run.sh
 ```
 
-The API starts on `http://localhost:8000`.
+This automatically creates a Python virtual environment, installs all dependencies, starts both the backend and frontend servers, and opens your browser to `http://localhost:3000`.
 
-### 2. Frontend (Next.js dashboard)
+### Using Make (alternative)
+
+```bash
+make setup    # One-time: creates .venv, installs Python + Node deps
+make run      # Starts both backend (port 8000) and frontend (port 3000)
+make clean    # Removes .venv, node_modules, and build artifacts
+```
+
+### Manual Setup
+
+If you prefer to start each service independently:
+
+**Backend (FastAPI + QuTiP simulation engine):**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-api.txt
+uvicorn api.main:app --reload --port 8000
+```
+
+**Frontend (Next.js dashboard):**
 
 ```bash
 cd frontend
@@ -48,18 +66,16 @@ npm install
 npm run dev
 ```
 
-The dashboard starts on `http://localhost:3000`.
-
-> **Deployment:** Set the `NEXT_PUBLIC_API_URL` environment variable in Vercel to point at your deployed Render backend URL. See `.env.example`.
+The dashboard starts on `http://localhost:3000` and the API on `http://localhost:8000`.
 
 ---
 
 ## How It Works
 
 1. **Sample** — Generate N random Gaussian-DRAG pulse parameter sets `[A, t₀, σ, φ, β]`.
-2. **Simulate** — Run QuTiP time-dependent Schrödinger equations for each pulse across sampled uncertainty instances `θ = [Δ, amp_scale, phase_skew, noise]`.
+2. **Simulate** — Run piecewise-constant Hamiltonian propagation U = Π_k exp(-iH_kΔt) for each pulse across sampled uncertainty instances `θ = [Δ, amp_scale, phase_skew, noise]`.
 3. **Surrogate** — Train a Random Forest regressor to predict worst-case fidelity from pulse + uncertainty features.
-4. **Optimize** — Differential Evolution searches the surrogate landscape in milliseconds for the globally robust parameters.
+4. **Optimize** — Differential Evolution searches the surrogate landscape for the globally robust parameters.
 5. **Verify** — Re-simulate the best candidate in the full physics simulator (not the surrogate) to confirm performance.
 
 The Hamiltonian throughout is the standard rotating-frame single-qubit model:
@@ -72,9 +88,22 @@ with decoherence handled via the Lindblad master equation (T₁, T₂) when spec
 
 ---
 
+## Two Run Modes
+
+| Mode | Training Samples | DE Iterations | Eval Points | Typical Time (local) |
+|---|---|---|---|---|
+| **Full Run** | 150 × 3 = 450 | maxiter=120, pop=18 | 64 + 128 | ~80–120s |
+| **Quick Demo** | 30 × 2 = 60 | maxiter=15, pop=8 | 8 + 16 | ~7–15s |
+
+Both modes produce valid physics results. The full run is more rigorous with higher surrogate accuracy; the Quick Demo is ideal for live presentations and career fairs.
+
+---
+
 ## Q-CTRL Boulder Opal Validation
 
-If a Q-CTRL API key is provided in the dashboard, the optimized pulse is transmitted to Boulder Opal's cloud infrastructure for independent validation. The resulting fidelity curve is over-plotted on the local simulation result, confirming that the lightweight surrogate-assisted output matches enterprise quantum control software.
+If running locally, you can enter your Q-CTRL API key in the dashboard to cross-validate the optimized pulse against Boulder Opal's cloud infrastructure. The resulting fidelity curve is plotted alongside the local simulation result.
+
+> **Note:** Boulder Opal uses OAuth browser authentication and is only available when running locally. When accessing the deployed version, the UI will display a notice directing users to clone the repo for BO validation.
 
 ---
 
@@ -85,7 +114,8 @@ If a Q-CTRL API key is provided in the dashboard, the optimized pulse is transmi
 - **Robustness Visualization** — Fidelity vs. detuning sweep plot showing optimized vs. unoptimized baseline.
 - **AWG Waveform Output** — IQ envelope arrays (rad/s) ready to be loaded into lab hardware.
 - **Hardware Limit Warnings** — UI warns when parameters exceed typical superconducting qubit constraints (< 20 ns duration, > 10 MHz drift).
-- **Boulder Opal Integration** — Optional enterprise cross-validation via Q-CTRL's cloud API.
+- **Quick Demo Mode** — Lightweight synthesis for fast demos at career fairs or live presentations.
+- **Boulder Opal Integration** — Optional enterprise cross-validation via Q-CTRL's cloud API (local mode only).
 
 ---
 
@@ -97,7 +127,7 @@ AutoPulseSynth/
 ├── autopulsesynth/       # Core Python package
 │   ├── model.py          # Hamiltonian + Lindblad model
 │   ├── pulses.py         # Gaussian-DRAG pulse family
-│   ├── simulate.py       # QuTiP / NumPy simulation backends
+│   ├── simulate.py       # NumPy / QuTiP simulation backends
 │   ├── metrics.py        # Gate fidelity (Horodecki formula)
 │   ├── optimize.py       # Surrogate training + Differential Evolution
 │   ├── ir.py             # Intermediate Representation (PulseIR)
@@ -106,9 +136,30 @@ AutoPulseSynth/
 ├── docs/                 # Technical report, architecture guide
 ├── tests/                # Physics unit tests (pytest)
 ├── scripts/              # Standalone analysis scripts
+├── run.sh                # One-command launcher (backend + frontend)
+├── Makefile              # make setup / make run / make clean
 ├── render.yaml           # Render deployment config (backend)
-└── requirements-api.txt  # Backend dependencies
+├── requirements-api.txt  # Backend dependencies
+└── requirements.txt      # Full development dependencies
 ```
+
+---
+
+## Deployment
+
+The application is deployed as a split-service architecture:
+
+- **Backend:** [Render](https://render.com) — Python FastAPI service
+- **Frontend:** [Vercel](https://vercel.com) — Next.js static deployment
+
+To deploy your own instance:
+
+1. Push the repo to GitHub
+2. Create a Render Web Service pointing at the repo root (see `render.yaml`)
+3. Create a Vercel project pointing at the `frontend/` directory
+4. Set `NEXT_PUBLIC_API_URL` in Vercel to your Render backend URL (e.g. `https://your-service.onrender.com`)
+
+See `.env.example` and `frontend/.env.local.example` for environment variable templates.
 
 ---
 
@@ -136,3 +187,4 @@ AutoPulseSynth/
 ## License
 
 MIT License — see [LICENSE](LICENSE) for details.
+
