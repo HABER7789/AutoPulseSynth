@@ -23,3 +23,8 @@ robustness_plot.png
 
 # AI generated or export files
 LINKEDIN_POST.md
+# Exclude all temp config
+.env*
+node_modules/
+.next/
+

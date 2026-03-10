@@ -1,22 +1,7 @@
-"""Simulation and fidelity utilities.
+"""Simulation and fidelity utilities (QuTiP and NumPy backends).
 
-Primary backend: **QuTiP** (if installed).
-Fallback backend: **NumPy/SciPy** piecewise-constant propagator.
-
-We use QuTiP because it is widely used for time-dependent Hamiltonians and makes it
-easy to extend this baseline to open-system dynamics later. The fallback exists
-so the notebook can still run in minimal environments.
-
-Hamiltonian (fixed structure):
-H(t) = (Δ_total/2) σ_z + (s * Ωx(t)/2) σ_x + (s * Ωy_eff(t)/2) σ_y
-
-Uncertainty θ = [detuning, amp_scale, phase_skew, noise_strength]
-- Δ_total = detuning + quasi-static noise draw
-- s = amp_scale
-- Ωy_eff = Ωy + phase_skew * Ωx  (simple IQ imbalance model)
-
-Average gate fidelity for d=2:
-F_avg(U, V) = (|Tr(V^† U)|^2 + d) / (d(d+1))
+Evaluates pulse performance under time-dependent Hamiltonians and 
+decoherence (via Lindblad master equation).
 """
 
 from __future__ import annotations

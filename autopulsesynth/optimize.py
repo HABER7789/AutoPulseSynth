@@ -1,13 +1,7 @@
-"""Surrogate-assisted uncertainty-aware optimization.
+"""Surrogate-assisted robust pulse optimization.
 
-Workflow:
-1) Generate dataset of (pulse_params, theta) -> fidelity via full simulation.
-2) Train a surrogate model to predict fidelity from features.
-3) Use the surrogate to optimize pulse parameters for performance under parameter variation across theta,
-   then verify in full simulator.
-
-This is not a replacement for GRAPE/Krotov. It is a research-grade baseline
-for ML-assisted search, emphasizing reproducibility and physically-fixed models.
+Trains a Random Forest surrogate to predict fidelity under drift.
+Uses Differential Evolution over the surrogate to rapidly find resilient parameters.
 """
 
 from __future__ import annotations

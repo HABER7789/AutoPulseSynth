@@ -1,28 +1,9 @@
-"""Physical model: fixed Hamiltonian structure with parameter uncertainty.
+"""Hamiltonian and parameter uncertainty models.
 
-We intentionally *do not* learn arbitrary Hamiltonians. The Hamiltonian structure is:
-
+Defines the fixed-structure qubit Hamiltonian under detuning and amplitude noise:
 H(t) = (Δ/2) σ_z + (Ω_x(t)/2) σ_x + (Ω_y(t)/2) σ_y
 
-where:
-- Δ is the (possibly uncertain) detuning in rad/s (drift term)
-- Ω_x(t), Ω_y(t) are control drives in rad/s (time-dependent)
-
-The parameter vector θ captures imperfect knowledge / calibration:
-θ = [detuning, amp_scale, phase_skew, noise_strength]
-
-- detuning: additive detuning Δ (rad/s)
-- amp_scale: multiplicative scale error on both quadratures (dimensionless)
-- phase_skew: small quadrature mixing (dimensionless, e.g., IQ imbalance)
-- noise_strength: optional quasi-static detuning noise std (rad/s)
-
-Notes:
-- We keep the structure fixed and only vary parameters.
-- We model performance under parameter variation by sampling θ and optimizing average or worst-case fidelity.
-
-Units:
-- Time in seconds
-- Frequencies in rad/s
+Uncertainty parameters θ: [detuning, amp_scale, phase_skew, noise_strength]
 """
 
 from __future__ import annotations

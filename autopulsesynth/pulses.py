@@ -1,28 +1,8 @@
-"""Pulse parameterizations with constraints.
+"""Pulse parameterizations and waveform generators.
 
-We use a compact and physically common family:
-- A Gaussian envelope on the in-phase (x) quadrature
-- Optional DRAG-like quadrature on y proportional to derivative of the Gaussian
-
-This yields a smooth pulse with a small number of parameters and is easy to export.
-
-Pulse parameters:
-p = [A, t0, sigma, phi, beta]
-
-- A: amplitude in rad/s (before amp_scale uncertainty)
-- t0: center time within [0, duration]
-- sigma: width (s)
-- phi: phase rotation between x and y quadratures (rad)
-- beta: DRAG coefficient (dimensionless) scales derivative term on the quadrature
-
-Controls:
-Ω_x(t) = A * g(t) * cos(phi) - A * beta * g'(t) * sin(phi)
-Ω_y(t) = A * g(t) * sin(phi) + A * beta * g'(t) * cos(phi)
-
-Constraints:
-- |Ω_x|, |Ω_y| <= amp_max
-- sigma >= sigma_min
-- smoothness is inherent (Gaussian), but we also optionally clip + smooth samples
+Defines the Gaussian-DRAG pulse family with hardware bounds.
+Parameters: [A, t0, sigma, phi, beta]
+Constraints: |Ω| <= amp_max, sigma >= sigma_min
 """
 
 from __future__ import annotations
