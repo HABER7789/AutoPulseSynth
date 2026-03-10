@@ -123,7 +123,7 @@ export default function AutoPulseDashboard() {
       <div className="relative z-10 flex flex-col h-full min-h-screen">
         {/* Top Navbar */}
         <nav className={`sticky top-0 z-50 transition-colors duration-300 ${theme.nav}`}>
-        <div className="w-full max-w-[1536px] mx-auto px-8 h-20 flex items-center justify-between">
+        <div className="w-full max-w-[1536px] mx-auto px-8 h-14 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className={`w-3.5 h-3.5 rounded-full ${isDark ? 'bg-zinc-100 shadow-[0_0_15px_rgba(255,255,255,0.8)]' : 'bg-slate-900 shadow-[0_0_15px_rgba(0,0,0,0.4)]'}`} />
             <span className={`text-lg font-bold tracking-tight ${theme.textMain}`}>AutoPulseSynth</span>
@@ -166,7 +166,7 @@ export default function AutoPulseDashboard() {
         </div>
       )}
 
-      <main className="w-full max-w-[1536px] mx-auto px-6 lg:px-8 py-4 min-h-[calc(100vh-80px)] lg:h-[calc(100vh-80px)] flex flex-col pt-6 lg:pt-10">
+      <main className="w-full max-w-[1536px] mx-auto px-6 lg:px-8 py-2 min-h-[calc(100vh-56px)] lg:h-[calc(100vh-56px)] flex flex-col pt-3 lg:pt-4">
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 flex-1 min-h-0">
           
@@ -283,38 +283,40 @@ export default function AutoPulseDashboard() {
                 </div>
               )}
 
-              <button 
-                type="submit" 
-                disabled={loading}
-                className={`w-full flex items-center justify-center py-3 rounded-md text-[13px] font-bold uppercase tracking-wider transition-all ${
-                  loading ? theme.btnDisabled + ' cursor-not-allowed' : theme.btnPrimary + ' active:scale-[0.98]'
-                }`}
-              >
-                {loading ? (
-                  <span className="flex items-center">
-                    <svg className={`animate-spin -ml-1 mr-2 h-4 w-4 ${theme.textSubtle}`} fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Synthesizing...
-                  </span>
-                ) : (
-                  <span className="flex items-center">
-                    <Play size={14} className="mr-2 fill-current" /> Run Surrogate Optimization
-                  </span>
-                )}
-              </button>
+              <div className="flex gap-2">
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className={`flex-1 flex items-center justify-center py-2.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all ${
+                    loading ? theme.btnDisabled + ' cursor-not-allowed' : theme.btnPrimary + ' active:scale-[0.98]'
+                  }`}
+                >
+                  {loading ? (
+                    <span className="flex items-center">
+                      <svg className={`animate-spin -ml-1 mr-2 h-4 w-4 ${theme.textSubtle}`} fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Synthesizing...
+                    </span>
+                  ) : (
+                    <span className="flex items-center">
+                      <Play size={12} className="mr-1.5 fill-current" /> Full Run
+                    </span>
+                  )}
+                </button>
 
-              <button 
-                type="button"
-                disabled={loading}
-                onClick={(e) => handleSynthesize(e, true)}
-                className={`w-full flex items-center justify-center py-2.5 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-all mt-2 ${
-                  loading ? theme.btnDisabled + ' cursor-not-allowed' : (isDark ? 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/10' : 'bg-black/5 text-black/50 hover:bg-black/10 border border-black/10') + ' active:scale-[0.98]'
-                }`}
-              >
-                <Play size={12} className="mr-2 fill-current" /> Quick Demo (~15s)
-              </button>
+                <button 
+                  type="button"
+                  disabled={loading}
+                  onClick={(e) => handleSynthesize(e, true)}
+                  className={`flex-1 flex items-center justify-center py-2.5 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-all ${
+                    loading ? theme.btnDisabled + ' cursor-not-allowed' : (isDark ? 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/10' : 'bg-black/5 text-black/50 hover:bg-black/10 border border-black/10') + ' active:scale-[0.98]'
+                  }`}
+                >
+                  <Play size={12} className="mr-1.5 fill-current" /> Quick Demo
+                </button>
+              </div>
             </form>
 
           </div>
