@@ -1,11 +1,127 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Play, Info, CheckCircle2, Cpu, Sun, Moon, ChevronRight, X } from 'lucide-react';
 import SignalConvergence from '@/components/SignalConvergence';
 
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false, loading: () => <div className="h-64 flex items-center justify-center text-zinc-500 font-mono text-xs">Initializing engine...</div> });
+
+function MatrixDisplay({ label, matrix, isDark }: { label: string; matrix: any[][]; isDark: boolean }) {
+  const fmt = (v: any) => {
+    if (typeof v === 'string') return v;
+    if (typeof v === 'object' && v !== null) {
+      const r = v[0] || 0, i = v[1] || 0;
+      if (Math.abs(i) < 1e-10) return r.toFixed(1);
+      if (Math.abs(r) < 1e-10) return `${i.toFixed(1)}i`;
+      return `${r.toFixed(1)}${i >= 0 ? '+' : ''}${i.toFixed(1)}i`;
+    }
+    return Number(v).toFixed(1);
+  };
+  return (
+    <div className="inline-block">
+      <span className={`text-[10px] ${isDark ? 'text-zinc-500' : 'text-slate-400'}`}>{label} = </span>
+      <span className="font-mono text-[11px]">
+        [{matrix.map((row, i) => (
+          <span key={i}>{i > 0 && ' '}{row.map((v, j) => <span key={j}>{j > 0 && ', '}{fmt(v)}</span>)}{i < matrix.length - 1 && ';'}</span>
+        ))}]
+      </span>
+    </div>
+  );
+}
+
+function StreamLogEntry({ evt, isDark, theme }: { evt: any; isDark: boolean; theme: any }) {
+  const { type, data } = evt;
+  const labelClass = `text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`;
+  const monoClass = `font-mono text-[11px] ${theme.textMuted}`;
+  const valClass = `font-mono text-[11px] font-semibold ${theme.textMain}`;
+
+  if (type === 'setup') {
+    return (
+      <div className="space-y-1.5">
+        <div className={labelClass}>▸ Hamiltonian</div>
+        <div className={monoClass}>{data.hamiltonian}</div>
+        <div className={monoClass}>
+          Δ ∈ [{data.delta_range_mhz[0]}, {data.delta_range_mhz[1]}] MHz &nbsp;|&nbsp; n_steps: <span className={valClass}>{data.n_steps}</span> &nbsp;|&nbsp; t: <span className={valClass}>{data.duration_ns}ns</span>
+        </div>
+        {data.target_unitary && (
+          <MatrixDisplay label="U_target" matrix={data.target_unitary} isDark={isDark} />
+        )}
+      </div>
+    );
+  }
+
+  if (type === 'training_start') {
+    return (
+      <div className="space-y-1">
+        <div className={labelClass}>▸ Training</div>
+        <div className={monoClass}>
+          Generating <span className={valClass}>{data.total_sims}</span> simulations ({data.n_pulses} pulses × {data.n_theta} θ)...
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'training_done') {
+    return (
+      <div className={monoClass}>
+        Training data complete — <span className={valClass}>{data.total_sims} sims</span> in <span className={valClass}>{data.elapsed}s</span>
+      </div>
+    );
+  }
+
+  if (type === 'surrogate') {
+    return (
+      <div className="space-y-1">
+        <div className={labelClass}>▸ Surrogate Model</div>
+        <div className={monoClass}>
+          Random Forest ({data.n_estimators} trees, {data.n_features} features)
+        </div>
+        <div className={monoClass}>
+          R² = <span className={`font-semibold ${isDark ? 'text-sky-400' : 'text-sky-600'}`}>{data.r2}</span> &nbsp;|&nbsp; MAE = <span className={valClass}>{data.mae}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'optimization') {
+    const pct = Math.min(100, Math.round((data.generations / data.maxiter) * 100));
+    return (
+      <div className="space-y-1.5">
+        <div className={labelClass}>▸ Differential Evolution</div>
+        <div className={monoClass}>
+          {data.generations} generations (pop={data.popsize}) — converged
+        </div>
+        <div className="w-full h-1.5 rounded-full overflow-hidden bg-black/10 dark:bg-white/10">
+          <div className={`h-full rounded-full transition-all ${isDark ? 'bg-emerald-400' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }} />
+        </div>
+        <div className={monoClass}>
+          f_mean = <span className={`font-semibold ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>{(data.pred_f_mean * 100).toFixed(1)}%</span> &nbsp;|&nbsp; f_worst = <span className={valClass}>{(data.pred_f_worst * 100).toFixed(1)}%</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'verification') {
+    return (
+      <div className="space-y-1.5">
+        <div className={labelClass}>▸ Verification ({data.n_theta} θ samples)</div>
+        <div className={monoClass}>
+          f_mean = <span className={`font-semibold text-[13px] ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>{(data.f_mean * 100).toFixed(2)}%</span> &nbsp;|&nbsp;
+          f_worst = <span className={`font-semibold text-[13px] ${theme.textMain}`}>{(data.f_worst * 100).toFixed(2)}%</span> &nbsp;|&nbsp;
+          σ = <span className={valClass}>{(data.f_std * 100).toFixed(2)}%</span>
+        </div>
+        {data.achieved_U && (
+          <div className={`${monoClass} space-y-0.5`}>
+            <div>U_achieved = [{data.achieved_U[0].join(', ')}; {data.achieved_U[1].join(', ')}]</div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return null;
+}
 
 export default function AutoPulseDashboard() {
   const [loading, setLoading] = useState(false);
@@ -28,6 +144,8 @@ export default function AutoPulseDashboard() {
   
   // Results State
   const [results, setResults] = useState<any>(null);
+  const [streamEvents, setStreamEvents] = useState<any[]>([]);
+  const logRef = useRef<HTMLDivElement>(null);
 
   // Determine Signal Phase
   const syncPhase = loading ? 'converging' : (results ? 'resolved' : 'idle');
@@ -51,41 +169,59 @@ export default function AutoPulseDashboard() {
     return () => clearInterval(interval);
   }, [loading]);
 
+  // Auto-scroll computation log
+  useEffect(() => {
+    if (logRef.current) {
+      logRef.current.scrollTop = logRef.current.scrollHeight;
+    }
+  }, [streamEvents]);
+
   const handleSynthesize = async (e: React.FormEvent, quick: boolean = false) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setResults(null);
+    setStreamEvents([]);
 
-    try {
-      const payload = {
-        gate: gate,
-        duration: parseFloat(duration) * 1e-6, 
-        det_max_hz: parseFloat(detMax) * 1e6,
-        det_min_hz: -parseFloat(detMax) * 1e6,
-        n_train: quick ? 30 : 150, 
-        n_theta_train: quick ? 2 : 3,
-        boulder_opal_key: boKey.trim() !== "" ? boKey : null,
-        quick: quick
-      };
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const params = new URLSearchParams({
+      gate,
+      duration: String(parseFloat(duration) * 1e-6),
+      det_max_hz: String(parseFloat(detMax) * 1e6),
+      det_min_hz: String(-parseFloat(detMax) * 1e6),
+      n_train: quick ? '30' : '150',
+      n_theta_train: quick ? '2' : '3',
+      seed: '42',
+      quick: String(quick),
+    });
+    if (boKey.trim()) params.set('boulder_opal_key', boKey);
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const res = await fetch(`${API_URL}/api/synthesize`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+    const es = new EventSource(`${API_URL}/api/synthesize-stream?${params}`);
+
+    const eventTypes = ['setup', 'training_start', 'training_done', 'surrogate', 'optimization', 'verification', 'complete', 'error'];
+    eventTypes.forEach(type => {
+      es.addEventListener(type, (event: MessageEvent) => {
+        const data = JSON.parse(event.data);
+        setStreamEvents(prev => [...prev, { type, data }]);
+
+        if (type === 'complete') {
+          setResults(data);
+          setLoading(false);
+          es.close();
+        }
+        if (type === 'error') {
+          setError(data.message || 'Synthesis failed');
+          setLoading(false);
+          es.close();
+        }
       });
+    });
 
-      if (!res.ok) {
-        throw new Error(`Engine Error: ${res.statusText}`);
-      }
-
-      const data = await res.json();
-      setResults(data);
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred.");
-    } finally {
+    es.onerror = () => {
+      setError('Connection to synthesis engine lost.');
       setLoading(false);
-    }
+      es.close();
+    };
   };
 
   const theme = {
@@ -346,9 +482,24 @@ export default function AutoPulseDashboard() {
             )}
 
             {!results && !error && (
-               <div className={`flex-grow flex flex-col items-center justify-center border border-dashed rounded-xl p-8 h-full transition-colors duration-300 ${theme.border} ${theme.cardAlt}`}>
-                  {loading ? (
-                    <>
+               <div className={`flex-grow flex flex-col border border-dashed rounded-xl h-full transition-colors duration-300 ${theme.border} ${theme.cardAlt}`}>
+                  {loading && streamEvents.length > 0 ? (
+                    <div className="flex flex-col h-full">
+                      <div className={`flex items-center justify-between px-4 py-2.5 border-b ${theme.border}`}>
+                        <div className="flex items-center space-x-2">
+                          <span className={`w-2 h-2 rounded-full animate-pulse ${isDark ? 'bg-emerald-400' : 'bg-emerald-500'}`}></span>
+                          <span className={`text-[11px] font-bold uppercase tracking-wider ${theme.textMain}`}>Computation Log</span>
+                        </div>
+                        <span className={`text-[11px] font-mono ${theme.textMuted}`}>{elapsedTime.toFixed(1)}s</span>
+                      </div>
+                      <div ref={logRef} className="flex-1 overflow-y-auto p-4 space-y-3 hide-scrollbar">
+                        {streamEvents.map((evt, i) => (
+                          <StreamLogEntry key={i} evt={evt} isDark={isDark} theme={theme} />
+                        ))}
+                      </div>
+                    </div>
+                  ) : loading ? (
+                    <div className="flex-grow flex flex-col items-center justify-center p-8">
                       <div className="flex items-center justify-center space-x-1.5 mb-6 h-12">
                         {[0, 1, 2, 3, 4, 5, 6].map(i => (
                           <div 
@@ -358,13 +509,10 @@ export default function AutoPulseDashboard() {
                           ></div>
                         ))}
                       </div>
-                      <h3 className={`text-sm font-medium ${theme.textMain} mb-2 animate-pulse`}>Synthesizing Quantum Controls</h3>
-                      <p className={`text-xs ${theme.textMuted} font-mono mt-1`}>
-                        Elapsed Time: {elapsedTime.toFixed(1)}s
-                      </p>
-                    </>
+                      <h3 className={`text-sm font-medium ${theme.textMain} mb-2 animate-pulse`}>Connecting to engine...</h3>
+                    </div>
                   ) : (
-                    <>
+                    <div className="flex-grow flex flex-col items-center justify-center p-8">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200 shadow-sm'}`}>
                         <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isDark ? 'bg-zinc-500' : 'bg-slate-400'}`}></span>
                       </div>
@@ -372,7 +520,7 @@ export default function AutoPulseDashboard() {
                       <p className={`text-xs max-w-xs text-center ${theme.textSubtle}`}>
                         Awaiting hardware parameters to generate the waveform and robustness matrices.
                       </p>
-                    </>
+                    </div>
                   )}
                </div>
             )}

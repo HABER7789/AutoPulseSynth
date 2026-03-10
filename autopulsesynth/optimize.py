@@ -150,6 +150,7 @@ def optimize_under_uncertainty(
     rng_seed: int = 1,
     maxiter: int = 120,
     popsize: int = 18,
+    callback=None,
 ) -> Dict[str, object]:
     """Optimize pulse parameters on surrogate, return best params and predicted fidelity."""
     rng = np.random.default_rng(rng_seed)
@@ -169,6 +170,7 @@ def optimize_under_uncertainty(
     tol=1e-4,
     updating="immediate",
     workers=1,  # <- important: avoid multiprocessing pickling
+    callback=callback,
     )
     
     best_params = result.x.astype(float)
