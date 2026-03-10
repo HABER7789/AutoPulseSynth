@@ -86,7 +86,7 @@ def synthesize_pulse(req: SynthesisRequest):
             uncertainty=uncertainty,
             mode="worst",
             target_ir=target_ir,
-            n_theta_eval=16,
+            n_theta_eval=64,
             rng_seed=req.seed
         )
 
@@ -96,7 +96,7 @@ def synthesize_pulse(req: SynthesisRequest):
             params=opt_res["best_params"],
             uncertainty=uncertainty,
             target_ir=target_ir,
-            n_theta=32,
+            n_theta=128,
             rng_seed=req.seed+1
         )
 
@@ -106,7 +106,7 @@ def synthesize_pulse(req: SynthesisRequest):
         time_grid = pulse.time_grid()
 
         det_bound = req.det_max_hz * 1.5
-        detunings = np.linspace(-det_bound, det_bound, 21)
+        detunings = np.linspace(-det_bound, det_bound, 41)
         det_rad = detunings * 2 * np.pi
 
         fids_opt = []
@@ -128,10 +128,10 @@ def synthesize_pulse(req: SynthesisRequest):
                 # Simple PWC time evolution using BO
                 graph = bo.Graph()
                 detunings_tensor = graph.tensor(detunings)
-                det_coefs = graph.reshape(detunings_tensor, [21, 1, 1]) * 2.0 * np.pi
+                det_coefs = graph.reshape(detunings_tensor, [41, 1, 1]) * 2.0 * np.pi
                 sz_t = graph.reshape(graph.tensor(np.array([[1, 0], [0, -1]], dtype=complex)), [1, 2, 2])
                 h_detuning = 0.5 * det_coefs * sz_t
-                h_det_rep = graph.reshape(h_detuning, [21, 1, 2, 2])
+                h_det_rep = graph.reshape(h_detuning, [41, 1, 2, 2])
                 n_steps = len(ox_opt)
                 h_det_t = graph.repeat(h_det_rep, repeats=n_steps, axis=1)
 
@@ -149,7 +149,7 @@ def synthesize_pulse(req: SynthesisRequest):
                 final_unitaries = unitaries[:, 0, :, :]
 
                 target_tensor = graph.tensor(np.array([[0, 1], [1, 0]], dtype=complex) if req.gate == 'X' else np.array([[0.5+0.5j, 0.5-0.5j], [0.5-0.5j, 0.5+0.5j]], dtype=complex))
-                target_tensor_rep = graph.repeat(graph.reshape(target_tensor, [1, 2, 2]), repeats=21, axis=0)
+                target_tensor_rep = graph.repeat(graph.reshape(target_tensor, [1, 2, 2]), repeats=41, axis=0)
                 products = graph.matmul(graph.adjoint(target_tensor_rep), final_unitaries)
                 fidelities_tr = graph.abs(graph.trace(products)) ** 2
                 infidelities = 1.0 - (fidelities_tr / 4.0)
