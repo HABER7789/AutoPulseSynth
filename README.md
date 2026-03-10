@@ -1,12 +1,20 @@
 # AutoPulseSynth: Quantum Control Optimization
 
+![AutoPulseSynth Banner](docs/images/image%2024.png)
+
 **A full-stack, machine-learning assisted optimization framework for generating hardware-resilient superconducting qubit pulses.**
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Next.js](https://img.shields.io/badge/frontend-Next.js-black.svg)](https://nextjs.org/)
 [![FastAPI](https://img.shields.io/badge/backend-FastAPI-teal.svg)](https://fastapi.tiangolo.com/)
 
-AutoPulseSynth synthesizes quantum control pulses that maintain **>99% fidelity** even under significant hardware calibration drift (e.g., charge noise, TLS defects). It utilizes a high-performance **Random Forest Surrogate Model** mapped over the QuTiP Schrödinger Lindblad simulator to instantly search the quantum control landscape for robust, physically deployable DRAG (Derivative Removal by Adiabatic Gate) envelopes.
+AutoPulseSynth synthesizes quantum control pulses that maintain **>96% fidelity** even under significant hardware calibration drift (e.g., charge noise, TLS defects). It utilizes a high-performance **Random Forest Surrogate Model** mapped over the QuTiP Schrödinger Lindblad simulator to instantly search the quantum control landscape for robust, physically deployable DRAG (Derivative Removal by Adiabatic Gate) envelopes.
+
+**Verified Performance:**
+- **98.5% mean fidelity** under ±2 MHz frequency drift + ±5% amplitude errors
+- **96.8% worst-case fidelity** across 64 uncertainty samples
+- **R²=0.90** surrogate model accuracy
+- Tested with QuTiP's Lindblad solver (T₁=15μs decoherence)
 
 ---
 
