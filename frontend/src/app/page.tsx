@@ -53,10 +53,13 @@ function StreamLogEntry({ evt, isDark, theme }: { evt: any; isDark: boolean; the
 
   if (type === 'training_start') {
     return (
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         <div className={labelClass}>▸ Training</div>
         <div className={monoClass}>
           Generating <span className={valClass}>{data.total_sims}</span> simulations ({data.n_pulses} pulses × {data.n_theta} θ)...
+        </div>
+        <div className="w-full h-1.5 rounded-full overflow-hidden bg-black/10 dark:bg-white/10">
+          <div className={`h-full rounded-full animate-pulse ${isDark ? 'bg-violet-400' : 'bg-violet-500'}`} style={{ width: '100%' }} />
         </div>
       </div>
     );
@@ -116,6 +119,31 @@ function StreamLogEntry({ evt, isDark, theme }: { evt: any; isDark: boolean; the
             <div>U_achieved = [{data.achieved_U[0].join(', ')}; {data.achieved_U[1].join(', ')}]</div>
           </div>
         )}
+      </div>
+    );
+  }
+
+  if (type === 'robustness_scan') {
+    return (
+      <div className="space-y-1">
+        <div className={labelClass}>▸ Robustness Scan</div>
+        <div className={monoClass}>
+          Sweeping <span className={valClass}>{data.n_points}</span> detuning points across ±3 MHz...
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'boulder_opal') {
+    return (
+      <div className="space-y-1.5">
+        <div className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-sky-400' : 'text-sky-600'}`}>▸ Boulder Opal (Q-CTRL)</div>
+        <div className={monoClass}>
+          Sending optimized pulse to Q-CTRL cloud for independent verification...
+        </div>
+        <div className="w-full h-1.5 rounded-full overflow-hidden bg-black/10 dark:bg-white/10">
+          <div className={`h-full rounded-full animate-pulse ${isDark ? 'bg-sky-400' : 'bg-sky-500'}`} style={{ width: '100%' }} />
+        </div>
       </div>
     );
   }
@@ -198,7 +226,7 @@ export default function AutoPulseDashboard() {
 
     const es = new EventSource(`${API_URL}/api/synthesize-stream?${params}`);
 
-    const eventTypes = ['setup', 'training_start', 'training_done', 'surrogate', 'optimization', 'verification', 'complete', 'error'];
+    const eventTypes = ['setup', 'training_start', 'training_done', 'surrogate', 'optimization', 'verification', 'robustness_scan', 'boulder_opal', 'complete', 'error'];
     eventTypes.forEach(type => {
       es.addEventListener(type, (event: MessageEvent) => {
         const data = JSON.parse(event.data);

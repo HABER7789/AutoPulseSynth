@@ -344,6 +344,11 @@ async def synthesize_stream(
             })
 
             # Now compute full results (robustness scan, BO, etc.)
+            # Event 7: Robustness scan
+            yield _sse_event("robustness_scan", {
+                "n_points": 41,
+                "elapsed": round(time.time() - t_start, 2),
+            })
             base_params = np.array([amp_max/2.0, duration/2.0, duration/4.0, 0.0, 0.0])
             ox_base, oy_base = pulse.sample_controls(base_params)
             time_grid = pulse.time_grid()
@@ -365,6 +370,11 @@ async def synthesize_stream(
             bo_fidelities = None
             bo_error = None
             if boulder_opal_key:
+                # Event 8: Boulder Opal benchmarking
+                yield _sse_event("boulder_opal", {
+                    "status": "connecting",
+                    "elapsed": round(time.time() - t_start, 2),
+                })
                 os.environ["QCTRL_PLATFORM_API_KEY"] = boulder_opal_key
                 try:
                     import boulderopal as bo
