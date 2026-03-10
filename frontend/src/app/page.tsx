@@ -178,7 +178,7 @@ export default function AutoPulseDashboard() {
               <h1 className="text-4xl lg:text-[42px] font-extrabold tracking-tighter mb-3 leading-[1.05]">Quantum Control <br className="hidden xl:block" /> Optimization.</h1>
               <p className={`text-[13px] font-medium leading-relaxed ${theme.textMuted}`}>
                 A production-grade ML pipeline that synthesizes hardware-resilient microwave pulses. 
-                Replace static hit-and-trial calibration with dynamic, calibration-free surrogate optimization.
+                Replace static hit-and-trial calibration with dynamic, surrogate-assisted optimization.
               </p>
             </div>
 
