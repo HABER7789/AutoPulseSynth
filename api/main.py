@@ -46,6 +46,22 @@ class SynthesisRequest(BaseModel):
     boulder_opal_key: Optional[str] = None
     quick: bool = False
 
+
+def gate_aware_baseline_params(gate: str, duration: float, amp_max: float) -> np.ndarray:
+    """Compute baseline pulse params with correct amplitude for the target gate.
+    
+    The amplitude is set so the Gaussian pulse integral equals the rotation
+    angle needed for the gate (pi for X, pi/2 for SX, etc.).
+    """
+    sigma = duration / 4.0
+    center = duration / 2.0
+    # rotation_angle = amp * sigma * sqrt(2*pi) for a Gaussian
+    gate_angles = {'X': np.pi, 'SX': np.pi / 2.0}
+    angle = gate_angles.get(gate, np.pi)  # default to pi
+    amp = angle / (sigma * np.sqrt(2 * np.pi))
+    amp = min(amp, amp_max)  # clamp to max
+    return np.array([amp, center, sigma, 0.0, 0.0])
+
 @app.post("/api/synthesize")
 def synthesize_pulse(req: SynthesisRequest):
     try:
@@ -109,8 +125,26 @@ def synthesize_pulse(req: SynthesisRequest):
             rng_seed=req.seed+1
         )
 
-        ox_opt, oy_opt = pulse.sample_controls(opt_res["best_params"])
-        base_params = np.array([amp_max/2.0, req.duration/2.0, req.duration/4.0, 0.0, 0.0])
+        # Gate-aware baseline: correct amplitude for target rotation
+        base_params = gate_aware_baseline_params(req.gate, req.duration, amp_max)
+        
+        # Safeguard: verify baseline in simulator
+        base_verify = verify_in_simulator(
+            model=model, pulse_family=pulse, params=base_params,
+            uncertainty=uncertainty, target_ir=target_ir,
+            n_theta=n_theta_verify, rng_seed=req.seed+1
+        )
+
+        # If baseline wins on worst-case, fall back to baseline
+        used_baseline_fallback = False
+        if base_verify["f_worst"] > verify_res["f_worst"]:
+            used_baseline_fallback = True
+            final_params = base_params
+            verify_res = base_verify
+        else:
+            final_params = opt_res["best_params"]
+
+        ox_opt, oy_opt = pulse.sample_controls(final_params)
         ox_base, oy_base = pulse.sample_controls(base_params)
         time_grid = pulse.time_grid()
 
@@ -180,6 +214,11 @@ def synthesize_pulse(req: SynthesisRequest):
                 "f_mean": verify_res["f_mean"],
                 "f_worst": verify_res["f_worst"],
                 "f_std": verify_res["f_std"],
+            },
+            "baseline_comparison": {
+                "used_baseline_fallback": used_baseline_fallback,
+                "baseline_f_mean": base_verify["f_mean"],
+                "baseline_f_worst": base_verify["f_worst"],
             },
             "plot_data": {
                 "time_ns": (time_grid * 1e9).tolist(),
@@ -325,8 +364,24 @@ async def synthesize_stream(
                 n_theta=n_theta_verify, rng_seed=seed+1
             )
 
+            # Gate-aware baseline + safeguard
+            base_params = gate_aware_baseline_params(gate, duration, amp_max)
+            base_verify = verify_in_simulator(
+                model=model, pulse_family=pulse, params=base_params,
+                uncertainty=uncertainty, target_ir=target_ir,
+                n_theta=n_theta_verify, rng_seed=seed+1
+            )
+
+            used_baseline_fallback = False
+            if base_verify["f_worst"] > verify_res["f_worst"]:
+                used_baseline_fallback = True
+                final_params = base_params
+                verify_res = base_verify
+            else:
+                final_params = opt_res["best_params"]
+
             # Compute achieved unitary at zero detuning
-            ox_opt, oy_opt = pulse.sample_controls(opt_res["best_params"])
+            ox_opt, oy_opt = pulse.sample_controls(final_params)
             zero_theta = np.array([0.0, 1.0, 0.0, 0.0])
             achieved_U = simulate_evolution(model, duration, ox_opt, oy_opt, zero_theta)
 
@@ -340,6 +395,8 @@ async def synthesize_stream(
                 "achieved_U": [
                     [complex_to_str(achieved_U[i][j]) for j in range(2)] for i in range(2)
                 ],
+                "used_baseline_fallback": used_baseline_fallback,
+                "baseline_f_worst": round(base_verify["f_worst"], 4),
                 "elapsed": round(time.time() - t_start, 2),
             })
 
@@ -349,7 +406,6 @@ async def synthesize_stream(
                 "n_points": 41,
                 "elapsed": round(time.time() - t_start, 2),
             })
-            base_params = np.array([amp_max/2.0, duration/2.0, duration/4.0, 0.0, 0.0])
             ox_base, oy_base = pulse.sample_controls(base_params)
             time_grid = pulse.time_grid()
 

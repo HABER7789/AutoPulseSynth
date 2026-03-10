@@ -119,6 +119,11 @@ function StreamLogEntry({ evt, isDark, theme }: { evt: any; isDark: boolean; the
             <div>U_achieved = [{data.achieved_U[0].join(', ')}; {data.achieved_U[1].join(', ')}]</div>
           </div>
         )}
+        {data.used_baseline_fallback && (
+          <div className={`mt-2 px-2.5 py-1.5 rounded-lg text-[10px] font-mono ${isDark ? 'bg-amber-500/10 border border-amber-500/20 text-amber-400' : 'bg-amber-50 border border-amber-200 text-amber-700'}`}>
+            ⚠ Surrogate accuracy insufficient for this gate. Using calibrated baseline pulse (f_worst = {(data.baseline_f_worst * 100).toFixed(1)}%). Increase training samples for better results.
+          </div>
+        )}
       </div>
     );
   }
