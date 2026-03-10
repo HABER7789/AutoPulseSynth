@@ -104,9 +104,8 @@ def simulate_unitary(
     Returns:
         U: 2x2 complex unitary (numpy array)
     """
-    if qt is None:
-        return _piecewise_unitary_numpy(model, duration, ox, oy, theta)
-    return _piecewise_unitary_qutip(model, duration, ox, oy, theta)
+    # Always use NumPy natively since function-based QuTiP ODE solver heavily bottlenecks constrained CPUs
+    return _piecewise_unitary_numpy(model, duration, ox, oy, theta)
 
 
 
@@ -190,9 +189,8 @@ def simulate_evolution(
 
     if not is_open:
         # returns U (2x2)
-        if qt is None:
-            return _piecewise_unitary_numpy(model, duration, ox, oy, theta)
-        return _piecewise_unitary_qutip(model, duration, ox, oy, theta)
+        # Always use the heavily optimized NumPy matrix exponential propagator 
+        return _piecewise_unitary_numpy(model, duration, ox, oy, theta)
     else:
         if qt is None:
             raise RuntimeError("QuTiP is required for dissipative simulation (T1/T2).")
