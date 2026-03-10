@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Syne, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 const syne = Syne({
@@ -29,6 +30,7 @@ export default function RootLayout({
         className={`${syne.className} ${syne.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );
