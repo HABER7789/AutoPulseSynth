@@ -74,3 +74,70 @@ def export_qiskit_schedule_optional(
     sched = Schedule(name="AutoPulseSynthSchedule")
     sched += Play(wf, ch)
     return sched
+
+
+def export_azure_quilt(
+    pulse_family: GaussianDragPulse,
+    params: np.ndarray,
+    gate_name: str = "rx",
+    qubit_index: int = 0,
+    smooth_sigma_pts: float = 0.0,
+) -> str:
+    """Export optimized pulse parameters to a Rigetti Quil-T program for Azure Quantum.
+
+    This generates pulse-level instructions compatible with Rigetti superconducting 
+    hardware routed through the Microsoft Azure Quantum platform.
+
+    Args:
+        pulse_family: Pulse family used for the optimization.
+        params: Optimized parameters.
+        gate_name: Name of the gate to define (e.g., 'rx', 'sx').
+        qubit_index: Hardware qubit integer index.
+        smooth_sigma_pts: Smoothing factor for control samples.
+
+    Returns:
+        A string representing the Quil-T program.
+    """
+    ox, oy = pulse_family.sample_controls(params, smooth_sigma_pts=smooth_sigma_pts)
+    
+    # Quil-T operates with generic complex lists of IQ envelopes normalized to [-1, 1].
+    # In a real hardware integration, we divide by the max hardware Rabi rate. 
+    # Here we normalize relative to amp_max.
+    amp_max = pulse_family.amp_max
+    iq_envelope = (ox + 1j * oy) / amp_max
+    
+    # Construct the base Quil-T syntax
+    dt_ns = (pulse_family.duration / pulse_family.n_steps) * 1e9
+    
+    lines = [
+        f'# AutoPulseSynth -> Azure Quantum (Rigetti Quil-T) Export',
+        f'# Target Gate: {gate_name.upper()} on Qubit {qubit_index}',
+        f'# Total Duration: {pulse_family.duration * 1e9:.2f} ns',
+        f'',
+        f'DECLARE ro BIT[1]',
+        f'',
+        f'# Define custom envelope',
+        f'DEFWAVEFORM autopulse_{gate_name}_q{qubit_index}:'
+    ]
+    
+    # Append the IQ points
+    for z in iq_envelope:
+        real_part = float(np.real(z))
+        imag_part = float(np.imag(z))
+        lines.append(f'    {real_part:.6f} + {imag_part:.6f}*i')
+        
+    lines.extend([
+        f'',
+        f'# Define physical gate calibration',
+        f'DEFGATE {gate_name.upper()} AS {gate_name.upper()}:',
+        f'    {gate_name.upper()} {qubit_index}',
+        f'',
+        f'DEFCAL {gate_name.upper()} {qubit_index}:',
+        f'    PULSE {qubit_index} "{qubit_index}" autopulse_{gate_name}_q{qubit_index}',
+        f'',
+        f'# Execute custom gate',
+        f'{gate_name.upper()} {qubit_index}',
+        f'MEASURE {qubit_index} ro[0]'
+    ])
+    
+    return "\n".join(lines)

@@ -22,6 +22,7 @@ from autopulsesynth.optimize import SurrogateDataset, train_surrogate, optimize_
 from autopulsesynth.ir import PulseIR
 from autopulsesynth.utils import hz_to_rad_s
 from autopulsesynth.simulate import simulate_evolution, target_unitary, fidelity_metric
+from autopulsesynth.export import export_azure_quilt
 
 app = FastAPI(title="AutoPulseSynth API")
 
@@ -215,6 +216,9 @@ def synthesize_pulse(req: SynthesisRequest):
                 "f_worst": verify_res["f_worst"],
                 "f_std": verify_res["f_std"],
             },
+            "quilt_program": export_azure_quilt(
+                pulse_family=pulse, params=opt_res["best_params"], gate_name=req.gate.lower(), qubit_index=0
+            ),
             "baseline_comparison": {
                 "used_baseline_fallback": used_baseline_fallback,
                 "baseline_f_mean": base_verify["f_mean"],
@@ -480,6 +484,9 @@ async def synthesize_stream(
                     "f_worst": verify_res["f_worst"],
                     "f_std": verify_res["f_std"],
                 },
+                "quilt_program": export_azure_quilt(
+                    pulse_family=pulse, params=opt_res["best_params"], gate_name=gate.lower(), qubit_index=0
+                ),
                 "baseline_comparison": {
                     "used_baseline_fallback": used_baseline_fallback,
                     "baseline_f_mean": base_verify["f_mean"],

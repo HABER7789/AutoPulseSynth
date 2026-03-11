@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Play, Info, CheckCircle2, Cpu, Sun, Moon, ChevronRight, X, AlertTriangle } from 'lucide-react';
+import { Play, Info, CheckCircle2, Cpu, Sun, Moon, ChevronRight, X, AlertTriangle, Download } from 'lucide-react';
 import SignalConvergence from '@/components/SignalConvergence';
 
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false, loading: () => <div className="h-64 flex items-center justify-center text-zinc-500 font-mono text-xs">Initializing engine...</div> });
@@ -745,6 +745,42 @@ export default function AutoPulseDashboard() {
                      />
                     )}
                   </div>
+                </div>
+
+                {/* Export Actions */}
+                <div className="flex gap-4 shrink-0 mt-2">
+                  <button 
+                    onClick={() => {
+                      const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `autopulse_results_${gate}.json`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    className={`flex-1 flex items-center justify-center py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${
+                      isDark ? 'bg-zinc-800/50 hover:bg-zinc-800 border-zinc-700/50 text-zinc-300' : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-600 shadow-sm'
+                    }`}
+                  >
+                    <Download size={14} className="mr-2" /> Download JSON Data
+                  </button>
+                  <button 
+                    onClick={() => {
+                      const blob = new Blob([results.quilt_program], { type: 'text/plain' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `${gate.toLowerCase()}_azure_rigetti.quil`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    className={`flex-1 flex items-center justify-center py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow border ${
+                      isDark ? 'bg-[#0078D4]/20 hover:bg-[#0078D4]/30 border-[#0078D4]/50 text-[#6CB8FF]' : 'bg-[#0078D4]/10 hover:bg-[#0078D4]/20 border-[#0078D4]/30 text-[#005A9E]'
+                    }`}
+                  >
+                    <Download size={14} className="mr-2" /> Export to Azure Quantum (Rigetti Quil-T)
+                  </button>
                 </div>
 
               </div>
