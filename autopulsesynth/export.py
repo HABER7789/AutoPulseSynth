@@ -79,65 +79,92 @@ def export_qiskit_schedule_optional(
 def export_azure_quilt(
     pulse_family: GaussianDragPulse,
     params: np.ndarray,
-    gate_name: str = "rx",
+    gate_name: str = "x",
     qubit_index: int = 0,
+    qubit_frequency_hz: float = 5.0e9,
     smooth_sigma_pts: float = 0.0,
 ) -> str:
-    """Export optimized pulse parameters to a Rigetti Quil-T program for Azure Quantum.
+    """Export optimized pulse parameters to a Rigetti Quil-T program.
 
-    This generates pulse-level instructions compatible with Rigetti superconducting 
-    hardware routed through the Microsoft Azure Quantum platform.
+    Generates a syntactically valid Quil-T program that can be submitted
+    to Rigetti superconducting hardware via Microsoft Azure Quantum or
+    directly through pyQuil.
+
+    The output follows the official Quil-T specification:
+    https://github.com/quil-lang/quil
 
     Args:
         pulse_family: Pulse family used for the optimization.
-        params: Optimized parameters.
-        gate_name: Name of the gate to define (e.g., 'rx', 'sx').
+        params: Optimized parameters (A, t0, sigma, phi, beta).
+        gate_name: Name of the gate to define (e.g., 'x', 'sx').
         qubit_index: Hardware qubit integer index.
+        qubit_frequency_hz: Qubit drive frequency in Hz (default 5 GHz).
         smooth_sigma_pts: Smoothing factor for control samples.
 
     Returns:
-        A string representing the Quil-T program.
+        A string representing a valid Quil-T program.
     """
     ox, oy = pulse_family.sample_controls(params, smooth_sigma_pts=smooth_sigma_pts)
-    
-    # Quil-T operates with generic complex lists of IQ envelopes normalized to [-1, 1].
-    # In a real hardware integration, we divide by the max hardware Rabi rate. 
-    # Here we normalize relative to amp_max.
+
+    # Normalize the IQ envelope to [-1, 1] relative to amp_max.
+    # On real hardware, the AWG scale factor maps this to physical voltage.
     amp_max = pulse_family.amp_max
     iq_envelope = (ox + 1j * oy) / amp_max
-    
-    # Construct the base Quil-T syntax
-    dt_ns = (pulse_family.duration / pulse_family.n_steps) * 1e9
-    
+
+    # Rigetti DACs typically run at 1 GS/s. We must resample our waveform
+    # to match the hardware sample rate. Duration in ns = number of samples
+    # at 1 GS/s.
+    hardware_sample_rate = 1e9  # 1 GS/s
+    n_hw_samples = int(round(pulse_family.duration * hardware_sample_rate))
+
+    # Resample from our simulation resolution to the hardware resolution
+    if len(iq_envelope) != n_hw_samples:
+        from scipy.signal import resample
+        iq_resampled = resample(iq_envelope, n_hw_samples)
+    else:
+        iq_resampled = iq_envelope
+
+    # Format complex samples as comma-separated list per the Quil-T spec:
+    #   DEFWAVEFORM name:
+    #       z1, z2, z3, ...
+    sample_strs = []
+    for z in iq_resampled:
+        re = float(np.real(z))
+        im = float(np.imag(z))
+        if im >= 0:
+            sample_strs.append(f"{re:.6f}+{im:.6f}i")
+        else:
+            sample_strs.append(f"{re:.6f}{im:.6f}i")
+
+    waveform_name = f"autopulse_{gate_name}_q{qubit_index}"
+    gate_upper = gate_name.upper()
+    frame = f'{qubit_index} "xy"'
+
     lines = [
-        f'# AutoPulseSynth -> Azure Quantum (Rigetti Quil-T) Export',
-        f'# Target Gate: {gate_name.upper()} on Qubit {qubit_index}',
-        f'# Total Duration: {pulse_family.duration * 1e9:.2f} ns',
-        f'',
-        f'DECLARE ro BIT[1]',
-        f'',
-        f'# Define custom envelope',
-        f'DEFWAVEFORM autopulse_{gate_name}_q{qubit_index}:'
+        f"# AutoPulseSynth -> Azure Quantum (Rigetti Quil-T) Export",
+        f"# Gate: {gate_upper} on qubit {qubit_index}",
+        f"# Duration: {pulse_family.duration * 1e9:.1f} ns "
+        f"({n_hw_samples} samples @ {hardware_sample_rate/1e9:.0f} GS/s)",
+        f"",
+        f"DECLARE ro BIT[1]",
+        f"",
+        f"# --- Hardware frame definition ---",
+        f'DEFFRAME {frame}:',
+        f"    SAMPLE-RATE: {hardware_sample_rate:.1f}",
+        f"    INITIAL-FREQUENCY: {qubit_frequency_hz:.1f}",
+        f"",
+        f"# --- Custom ML-optimized waveform ({n_hw_samples} IQ samples) ---",
+        f"DEFWAVEFORM {waveform_name}:",
+        f"    {', '.join(sample_strs)}",
+        f"",
+        f"# --- Gate calibration: override default {gate_upper} with custom pulse ---",
+        f"DEFCAL {gate_upper} {qubit_index}:",
+        f"    PULSE {frame} {waveform_name}",
+        f"",
+        f"# --- Execute and measure ---",
+        f"{gate_upper} {qubit_index}",
+        f"MEASURE {qubit_index} ro[0]",
     ]
-    
-    # Append the IQ points
-    for z in iq_envelope:
-        real_part = float(np.real(z))
-        imag_part = float(np.imag(z))
-        lines.append(f'    {real_part:.6f} + {imag_part:.6f}*i')
-        
-    lines.extend([
-        f'',
-        f'# Define physical gate calibration',
-        f'DEFGATE {gate_name.upper()} AS {gate_name.upper()}:',
-        f'    {gate_name.upper()} {qubit_index}',
-        f'',
-        f'DEFCAL {gate_name.upper()} {qubit_index}:',
-        f'    PULSE {qubit_index} "{qubit_index}" autopulse_{gate_name}_q{qubit_index}',
-        f'',
-        f'# Execute custom gate',
-        f'{gate_name.upper()} {qubit_index}',
-        f'MEASURE {qubit_index} ro[0]'
-    ])
-    
+
     return "\n".join(lines)
+
