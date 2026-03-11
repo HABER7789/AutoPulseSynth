@@ -109,6 +109,21 @@ If running locally, you can enter your Q-CTRL API key in the dashboard to cross-
 
 ---
 
+## Azure Quantum Export (Rigetti Quil-T)
+
+After synthesis completes, the dashboard provides an **"Export to Azure Quantum"** button that downloads the optimized pulse as a Rigetti Quil-T program file (`.quil`).
+
+The exported file contains:
+- 800-point IQ waveform envelope defined via `DEFWAVEFORM`
+- Custom gate calibration block (`DEFCAL`) that overrides the default gate with the ML-optimized pulse
+- Measurement instruction for readout
+
+This `.quil` file is formatted for Rigetti's superconducting QPUs, which are available as a hardware provider on Microsoft Azure Quantum. An example submission script is provided in `scripts/azure_quantum_submit.py`.
+
+> **Important:** This is a **format export only**. AutoPulseSynth does not connect to Azure Quantum or execute on real hardware. The exported file would require an Azure Quantum workspace with Rigetti access to run on physical qubits.
+
+---
+
 ## Features
 
 - **DRAG Pulse Synthesis** — Gaussian-DRAG parameterization with physically constrained amplitude, width, phase, and DRAG coefficient.
@@ -118,6 +133,7 @@ If running locally, you can enter your Q-CTRL API key in the dashboard to cross-
 - **Hardware Limit Warnings** — UI warns when parameters exceed typical superconducting qubit constraints (< 20 ns duration, > 10 MHz drift).
 - **Quick Demo Mode** — Lightweight synthesis for fast demos at career fairs or live presentations.
 - **Boulder Opal Integration** — Optional enterprise cross-validation via Q-CTRL's cloud API (local mode only).
+- **Azure Quantum Export** — One-click download of the optimized pulse as a Rigetti Quil-T program file (`.quil`), formatted for potential execution on superconducting hardware via Microsoft Azure Quantum. This is a format export, not a live hardware submission.
 
 ---
 
@@ -133,7 +149,7 @@ AutoPulseSynth/
 │   ├── metrics.py        # Gate fidelity (Horodecki formula)
 │   ├── optimize.py       # Surrogate training + Differential Evolution
 │   ├── ir.py             # Intermediate Representation (PulseIR)
-│   └── export.py         # JSON / Qiskit export
+│   └── export.py         # JSON / Qiskit / Rigetti Quil-T export
 ├── frontend/             # Next.js dashboard (React, TailwindCSS, Plotly.js)
 ├── docs/                 # Technical report, architecture guide
 ├── tests/                # Physics unit tests (pytest)
@@ -170,7 +186,8 @@ See `.env.example` and `frontend/.env.local.example` for environment variable te
 - **Platform:** Superconducting transmon qubits (single-qubit gates only).
 - **Validated gates:** X (π-pulse), SX (π/2-pulse).
 - **Pulse duration:** 20–100 ns. Outside this range, optimizer convergence degrades.
-- **Simulation only:** All results are from numerical simulation. No hardware-in-the-loop validation has been performed.
+- **Simulation only:** All fidelity results are from numerical simulation. No hardware-in-the-loop validation has been performed.
+- **Azure Quantum export:** The Quil-T export produces a correctly formatted file but has not been tested on physical Rigetti hardware. It requires an Azure Quantum subscription with Rigetti provider access.
 - **Two-qubit gates:** Not supported (planned).
 
 ---
