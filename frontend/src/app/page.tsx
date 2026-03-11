@@ -224,7 +224,7 @@ export default function AutoPulseDashboard() {
       det_min_hz: String(-parseFloat(detMax) * 1e6),
       n_train: quick ? '30' : '150',
       n_theta_train: quick ? '2' : '3',
-      seed: '42',
+      seed: '43',
       quick: String(quick),
     });
     if (boKey.trim()) params.set('boulder_opal_key', boKey);
