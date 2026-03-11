@@ -9,7 +9,9 @@
 [![FastAPI](https://img.shields.io/badge/backend-FastAPI-teal.svg)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-AutoPulseSynth synthesizes Gaussian-DRAG microwave control pulses for superconducting qubits that remain robust under hardware calibration drift (charge noise, TLS defects). A Random Forest surrogate model trained over QuTiP physics simulations drives a Differential Evolution optimizer to find pulse parameters that maximize worst-case fidelity across a specified uncertainty window.
+AutoPulseSynth synthesizes Gaussian-DRAG microwave control pulses for superconducting qubits that remain robust under Hamiltonian uncertainty (e.g. charge noise drift, TLS defects). A Random Forest surrogate model trains over QuTiP physics simulations, driving a Differential Evolution optimizer to find pulse parameters that maximize worst-case fidelity. 
+
+The pipeline includes an automated **gate-aware baseline safeguard** that verifies optimized pulses against analytically calibrated baselines in the simulator, falling back when the surrogate cannot improve. At high drift (±10 MHz), the optimizer pushes worst-case fidelity from **80% to 89%**. All real-time unitary matrix evolutions are optionally cross-validated against Q-CTRL **Boulder Opal**.
 
 **Live Demo:** [auto-pulse-synth.vercel.app](https://auto-pulse-synth.vercel.app)
 
