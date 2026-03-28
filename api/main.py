@@ -217,7 +217,7 @@ def synthesize_pulse(req: SynthesisRequest):
                 "f_std": verify_res["f_std"],
             },
             "quilt_program": export_azure_quilt(
-                pulse_family=pulse, params=opt_res["best_params"], gate_name=req.gate.lower(), qubit_index=0
+                pulse_family=pulse, params=final_params, gate_name=req.gate.lower(), qubit_index=0
             ),
             "baseline_comparison": {
                 "used_baseline_fallback": used_baseline_fallback,
@@ -485,7 +485,7 @@ async def synthesize_stream(
                     "f_std": verify_res["f_std"],
                 },
                 "quilt_program": export_azure_quilt(
-                    pulse_family=pulse, params=opt_res["best_params"], gate_name=gate.lower(), qubit_index=0
+                    pulse_family=pulse, params=final_params, gate_name=gate.lower(), qubit_index=0
                 ),
                 "baseline_comparison": {
                     "used_baseline_fallback": used_baseline_fallback,

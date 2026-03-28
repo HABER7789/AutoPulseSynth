@@ -1,0 +1,60 @@
+{
+  "name": "autopulsesynth-inspector",
+  "displayName": "AutoPulseSynth Inspector",
+  "description": "Visual pulse inspector for AutoPulseSynth — view waveforms, fidelity, and re-optimize from VS Code.",
+  "version": "0.2.0",
+  "publisher": "haber",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Visualization"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "autopulsesynth.openInspector",
+        "title": "AutoPulseSynth: Open Pulse Inspector"
+      },
+      {
+        "command": "autopulsesynth.quickOptimize",
+        "title": "AutoPulseSynth: Quick Optimize (New Pulse)"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "autopulsesynth.pulseInspector",
+        "displayName": "Pulse Inspector",
+        "selector": [
+          {
+            "filenamePattern": "*.pulse.json"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "configuration": {
+      "title": "AutoPulseSynth",
+      "properties": {
+        "autopulsesynth.apiUrl": {
+          "type": "string",
+          "default": "http://localhost:8000",
+          "description": "URL of the AutoPulseSynth FastAPI backend."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.75.0",
+    "@types/node": "16.x",
+    "typescript": "^4.9.5"
+  }
+}

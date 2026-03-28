@@ -1,0 +1,226 @@
+:root {
+	--glass-bg: rgba(255, 255, 255, 0.03);
+	--glass-border: rgba(255, 255, 255, 0.1);
+	--accent: #007acc;
+}
+
+* { box-sizing: border-box; }
+
+body {
+	background: var(--vscode-editor-background);
+	color: var(--vscode-editor-foreground);
+	font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+	margin: 0;
+	padding: 16px;
+	overflow-y: auto;
+}
+
+#header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 16px;
+}
+
+#header h2 {
+	margin: 0;
+	font-weight: 600;
+	font-size: 1.2rem;
+	background: linear-gradient(135deg, #007acc, #00bfff);
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+#status-bar {
+	font-size: 0.85rem;
+	color: #888;
+}
+
+/* ── Metrics cards ──────────────────────────────────────── */
+#metrics-panel {
+	display: flex;
+	gap: 12px;
+	margin-bottom: 16px;
+	flex-wrap: wrap;
+}
+
+.metric-card {
+	flex: 1;
+	min-width: 120px;
+	background: var(--glass-bg);
+	border: 1px solid var(--glass-border);
+	border-radius: 8px;
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.metric-card .label {
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: #888;
+}
+
+.metric-card .value {
+	font-size: 1.3rem;
+	font-weight: 700;
+	font-family: 'Fira Code', monospace;
+}
+
+.metric-card.good .value { color: #4caf50; }
+.metric-card.ok .value   { color: #ff9800; }
+.metric-card.bad .value  { color: #f44336; }
+
+/* ── Charts ─────────────────────────────────────────────── */
+#charts-row {
+	display: flex;
+	gap: 16px;
+	margin-bottom: 16px;
+	flex-wrap: wrap;
+}
+
+.chart-box {
+	flex: 1;
+	min-width: 300px;
+	background: var(--glass-bg);
+	border: 1px solid var(--glass-border);
+	border-radius: 8px;
+	padding: 12px;
+}
+
+.chart-box h3 {
+	margin: 0 0 8px 0;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: #aaa;
+}
+
+.chart-box canvas {
+	width: 100%;
+	border-radius: 4px;
+}
+
+/* ── Circuit inspection panel ──────────────────────────── */
+#circuit-panel {
+	background: var(--glass-bg);
+	border: 1px solid var(--glass-border);
+	border-radius: 8px;
+	padding: 12px;
+	margin-bottom: 16px;
+}
+
+#circuit-panel h3 {
+	margin: 0 0 8px 0;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: #aaa;
+}
+
+#quilt-code {
+	font-family: 'Fira Code', 'Courier New', monospace;
+	font-size: 0.78rem;
+	line-height: 1.5;
+	white-space: pre-wrap;
+	margin: 0;
+	color: #ccc;
+	max-height: 300px;
+	overflow-y: auto;
+	padding: 8px;
+	background: rgba(0, 0, 0, 0.2);
+	border-radius: 4px;
+	border: 1px solid var(--glass-border);
+}
+
+#quilt-code .kw { color: #c586c0; }
+#quilt-code .comment { color: #6a9955; }
+#quilt-code .num { color: #b5cea8; }
+#quilt-code .str { color: #ce9178; }
+#quilt-code .gate { color: #dcdcaa; font-weight: 700; }
+
+#quilt-code.collapsed { display: none; }
+
+.toggle-header {
+	cursor: pointer;
+	user-select: none;
+}
+.toggle-header:hover { color: #ccc; }
+
+#circuit-summary {
+	font-size: 0.8rem;
+	color: #999;
+	margin-top: 6px;
+	line-height: 1.5;
+}
+
+#circuit-summary code {
+	background: rgba(255, 255, 255, 0.08);
+	padding: 1px 4px;
+	border-radius: 3px;
+	font-family: 'Fira Code', monospace;
+	color: #c586c0;
+}
+
+/* ── Bottom panels ──────────────────────────────────────── */
+#bottom-row {
+	display: flex;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+#params-panel, #actions-panel {
+	flex: 1;
+	min-width: 250px;
+	background: var(--glass-bg);
+	border: 1px solid var(--glass-border);
+	border-radius: 8px;
+	padding: 12px;
+}
+
+#params-panel h3, #actions-panel h3 {
+	margin: 0 0 8px 0;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: #aaa;
+}
+
+#params-text {
+	font-family: 'Fira Code', 'Courier New', monospace;
+	font-size: 0.8rem;
+	line-height: 1.6;
+	white-space: pre-wrap;
+	margin: 0;
+	color: #ccc;
+}
+
+#btn-reoptimize {
+	background: linear-gradient(135deg, #007acc, #00bfff);
+	color: white;
+	border: none;
+	padding: 10px 20px;
+	border-radius: 6px;
+	font-weight: 600;
+	cursor: pointer;
+	font-size: 0.9rem;
+	transition: opacity 0.2s;
+	width: 100%;
+	margin-bottom: 12px;
+}
+
+#btn-reoptimize:hover { opacity: 0.85; }
+#btn-reoptimize:active { transform: scale(0.98); }
+
+#debug-output {
+	font-family: 'Fira Code', 'Courier New', monospace;
+	font-size: 0.75rem;
+	color: #666;
+	background: rgba(0, 0, 0, 0.2);
+	padding: 8px;
+	border-radius: 4px;
+	white-space: pre-wrap;
+	max-height: 150px;
+	overflow-y: auto;
+	border: 1px solid var(--glass-border);
+}
