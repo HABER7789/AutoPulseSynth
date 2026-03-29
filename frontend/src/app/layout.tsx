@@ -17,6 +17,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "AutoPulseSynth",
   description: "Quantum Control Optimization",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

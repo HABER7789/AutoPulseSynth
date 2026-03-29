@@ -399,16 +399,18 @@ export default function AutoPulseDashboard() {
               <button
                 type="button"
                 onClick={() => setCompilerMode(false)}
-                className={`flex-1 py-2 text-[11px] font-bold tracking-wider uppercase transition-colors ${!compilerMode ? (isDark ? 'bg-zinc-800 text-white' : 'bg-slate-200 text-black') : theme.textSubtle}`}
+                className={`flex-1 py-2.5 text-[10px] font-bold tracking-widest uppercase transition-colors flex items-center justify-center gap-2 ${!compilerMode ? (isDark ? 'bg-zinc-800 text-white' : 'bg-slate-200 text-black shadow-inner') : theme.textSubtle}`}
               >
-                Single Target
+                <span>Single Target</span>
+                <span className={`px-1.5 py-0.5 rounded text-[8px] font-mono leading-none ${!compilerMode ? (isDark ? 'bg-zinc-700 text-zinc-300' : 'bg-white text-slate-600 shadow-sm') : 'bg-transparent border border-current opacity-50'}`}>01</span>
               </button>
               <button
                 type="button"
                 onClick={() => setCompilerMode(true)}
-                className={`flex-1 py-2 text-[11px] font-bold tracking-wider uppercase transition-colors ${compilerMode ? (isDark ? 'bg-zinc-800 text-white' : 'bg-slate-200 text-black') : theme.textSubtle}`}
+                className={`flex-1 py-2.5 text-[10px] font-bold tracking-widest uppercase transition-colors flex items-center justify-center gap-2 ${compilerMode ? (isDark ? 'bg-zinc-800 text-white' : 'bg-slate-200 text-black shadow-inner') : theme.textSubtle}`}
               >
-                OpenQASM
+                <span>OpenQASM</span>
+                <span className={`px-1.5 py-0.5 rounded text-[8px] font-mono leading-none ${compilerMode ? (isDark ? 'bg-indigo-500 text-white' : 'bg-indigo-600 text-white shadow-sm') : 'bg-transparent border border-current opacity-50'}`}>NEW</span>
               </button>
             </div>
 
