@@ -18,7 +18,9 @@ export const metadata: Metadata = {
   title: "AutoPulseSynth",
   description: "Quantum Control Optimization",
   icons: {
-    icon: "/favicon.svg",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
   },
 };
 

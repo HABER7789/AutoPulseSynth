@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" /> <stop offset="100%" stop-color="#020617" /> </linearGradient>
+
+    <linearGradient id="gaussianGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />   <stop offset="50%" stop-color="#818cf8" />  <stop offset="100%" stop-color="#c084fc" /> </linearGradient>
+
+    <linearGradient id="dragGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f43f5e" />   <stop offset="100%" stop-color="#f97316" /> </linearGradient>
+
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="url(#bgGradient)" />
+
+  <ellipse cx="256" cy="256" rx="180" ry="70" fill="none" stroke="#1e293b" stroke-width="6" transform="rotate(30 256 256)" />
+  <ellipse cx="256" cy="256" rx="180" ry="70" fill="none" stroke="#1e293b" stroke-width="6" transform="rotate(-30 256 256)" />
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#1e293b" stroke-width="4" stroke-dasharray="12 12" />
+
+  <path d="M 64 256 
+           L 140 256 
+           C 170 256, 180 160, 210 160 
+           C 256 160, 256 352, 302 352 
+           C 332 352, 342 256, 372 256 
+           L 448 256" 
+        fill="none" 
+        stroke="url(#dragGradient)" 
+        stroke-width="16" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+        opacity="0.85" />
+
+  <path d="M 64 256 
+           L 140 256 
+           C 180 256, 200 96, 256 96 
+           C 312 96, 332 256, 372 256 
+           L 448 256" 
+        fill="none" 
+        stroke="url(#gaussianGradient)" 
+        stroke-width="24" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+        filter="url(#glow)" />
+
+  <circle cx="256" cy="96" r="12" fill="#ffffff" filter="url(#glow)" />
+</svg>
