@@ -174,6 +174,8 @@ export default function AutoPulseDashboard() {
   const [duration, setDuration] = useState("0.04");
   const [detMax, setDetMax] = useState("2.0");
   const [boKey, setBoKey] = useState("");
+  const [compilerMode, setCompilerMode] = useState(false);
+  const [qasmText, setQasmText] = useState(`OPENQASM 2.0;\ninclude "qelib1.inc";\nqreg q[1];\nx q[0];\nsx q[0];`);
   
   // Results State
   const [results, setResults] = useState<any>(null);
@@ -217,6 +219,25 @@ export default function AutoPulseDashboard() {
     setStreamEvents([]);
 
     const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+    if (compilerMode) {
+      try {
+        const res = await fetch(`${API_URL}/api/compile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ qasm: qasmText })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Compilation failed');
+        setResults(data);
+      } catch (err: any) {
+        setError(err.message || 'Compilation failed');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     const params = new URLSearchParams({
       gate,
       duration: String(parseFloat(duration) * 1e-6),
@@ -373,9 +394,29 @@ export default function AutoPulseDashboard() {
               <ChevronRight size={18} className={theme.textSubtle} />
             </button>
 
+            {/* Mode Toggle */}
+            <div className={`flex rounded-lg overflow-hidden border ${theme.border} ${theme.cardAlt}`}>
+              <button
+                type="button"
+                onClick={() => setCompilerMode(false)}
+                className={`flex-1 py-2 text-[11px] font-bold tracking-wider uppercase transition-colors ${!compilerMode ? (isDark ? 'bg-zinc-800 text-white' : 'bg-slate-200 text-black') : theme.textSubtle}`}
+              >
+                Single Target
+              </button>
+              <button
+                type="button"
+                onClick={() => setCompilerMode(true)}
+                className={`flex-1 py-2 text-[11px] font-bold tracking-wider uppercase transition-colors ${compilerMode ? (isDark ? 'bg-zinc-800 text-white' : 'bg-slate-200 text-black') : theme.textSubtle}`}
+              >
+                OpenQASM
+              </button>
+            </div>
+
             {/* Form */}
             <form onSubmit={handleSynthesize} className="space-y-4">
               <div className={`space-y-4 ${theme.card} border ${theme.border} p-5 rounded-xl transition-colors duration-300`}>
+                {!compilerMode ? (
+                  <>
                 <div>
                   <label className={`block text-[11px] font-bold mb-2 uppercase tracking-widest ${theme.textMuted}`}>Target Gate</label>
                   <select 
@@ -439,6 +480,23 @@ export default function AutoPulseDashboard() {
                     </div>
                   )}
                 </div>
+                </>
+                ) : (
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                       <label className={`block text-[11px] font-bold uppercase tracking-widest ${theme.textMuted}`}>OpenQASM 2.0 Circuit</label>
+                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${isDark ? 'bg-[#0078D4]/20 border-[#0078D4]/30 text-[#6CB8FF]' : 'bg-[#0078D4]/10 border-[#0078D4]/20 text-[#005A9E]'}`}>QIR Compatible</span>
+                    </div>
+                    <textarea 
+                      value={qasmText}
+                      onChange={(e) => setQasmText(e.target.value)}
+                      rows={6}
+                      className={`w-full font-mono rounded-md px-3 py-2 text-xs transition-colors border focus:outline-none ${theme.input}`}
+                      spellCheck="false"
+                    />
+                    <p className={`text-[10px] font-mono mt-2 ${theme.textSubtle}`}>Sequence will be unrolled and each gate separately optimized via surrogate before concatenation into a single schedule.</p>
+                  </div>
+                )}
               </div>
 
               {isExtreme && !dismissWarning && (
@@ -475,15 +533,16 @@ export default function AutoPulseDashboard() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Synthesizing...
+                      {compilerMode ? 'Compiling QASM...' : 'Synthesizing...'}
                     </span>
                   ) : (
                     <span className="flex items-center">
-                      <Play size={12} className="mr-1.5 fill-current" /> Full Run
+                      <Play size={12} className="mr-1.5 fill-current" /> {compilerMode ? 'Compile Schedule' : 'Full Run'}
                     </span>
                   )}
                 </button>
 
+                {!compilerMode && (
                 <button 
                   type="button"
                   disabled={loading}
@@ -494,6 +553,7 @@ export default function AutoPulseDashboard() {
                 >
                   <Play size={12} className="mr-1.5 fill-current" /> Quick Demo
                 </button>
+                )}
               </div>
             </form>
 
@@ -608,6 +668,7 @@ export default function AutoPulseDashboard() {
                 <div className={`flex-1 min-h-0 flex flex-col ${theme.card} border ${theme.border} rounded-xl overflow-hidden p-2 transition-colors duration-300`}>
                   
                   {/* Robustness Plot */}
+                  {!results.is_compiler_mode && (
                   <div className={`flex-1 min-h-[160px] w-full relative border-b ${theme.border}`}>
                     {Plot && (
                       <Plot
@@ -681,6 +742,7 @@ export default function AutoPulseDashboard() {
                       />
                     )}
                   </div>
+                  )}
 
                   {/* AWG Waveform Plot */}
                   <div className="h-[180px] w-full relative pt-2 shrink-0">

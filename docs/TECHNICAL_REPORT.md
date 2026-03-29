@@ -128,7 +128,8 @@ Live re-simulation results (not surrogate), seed=42, X gate, 40 ns, T1=15 μs:
 | Metric | Value |
 |---|---|
 | Mean gate fidelity | **98.5%** (±2 MHz, ±5% amplitude) |
-| Worst-case fidelity | **96.8%** (200 samples) |
+| Worst-case fidelity (±2 MHz drift) | **96.8%** (200 samples) |
+| Worst-case fidelity (±10 MHz drift) | **89.9%** (improved from ~80.0% baseline) |
 | Surrogate R² | **0.90** (held-out 20% test set) |
 | Surrogate MAE | **0.042** (fidelity units) |
 
