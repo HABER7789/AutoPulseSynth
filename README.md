@@ -99,6 +99,14 @@ AutoPulseSynth/
 └── requirements.txt      # Total dependencies
 ```
 
+## Acknowledgements
+
+This project leverages the following quantum software ecosystems:
+- **Microsoft QDK & QIR**: The OpenQASM ingestion and compiler layers are designed for compatibility with Microsoft's [Quantum Intermediate Representation (QIR)](https://github.com/qir-alliance/qir-spec).
+- **Qiskit**: Used for circuit unrolling and OpenQASM 2.0 parsing.
+- **QuTiP**: High-performance quantum state propagation and Hamiltonian simulation.
+- **Q-CTRL Boulder Opal**: Cloud-based API infrastructure for pulse cross-validation.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

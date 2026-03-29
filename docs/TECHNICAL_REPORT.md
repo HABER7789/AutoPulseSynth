@@ -168,3 +168,11 @@ Live re-simulation results (not surrogate), seed=42, X gate, 40 ns, T1=15 μs:
 - **Superconducting transmon model.** DRAG pulses and 20–100 ns time scales are specific to this platform.
 - **Surrogate extrapolation.** Surrogate accuracy degrades if the deployment drift range differs significantly from the training range. Always train over the full intended uncertainty window.
 - **Duration limits.** Below ~20 ns: required amplitudes approach hardware limits and leakage to $|2\rangle$ becomes non-negligible (not modeled in the two-level approximation). Above ~500 ns: decoherence dominates.
+
+---
+
+## 12. Acknowledgements & Citations
+
+- **Microsoft Quantum Development Kit (QDK)**: This project utilizes architectural patterns from the Microsoft QDK and targets the **Quantum Intermediate Representation (QIR)** for hardware-agnostic execution schedules.
+- **Qiskit (IBM Quantum)**: Implementation of OpenQASM 2.0 parsing and basis gate decomposition.
+- **QuTiP**: J.R. Johansson, P.D. Nation, and F. Nori, "QuTiP 2: A Python framework for the dynamics of open quantum systems", *Comp. Phys. Comm.* 184, 1234 (2013).
